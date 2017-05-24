@@ -13,3 +13,4 @@ OpenGL-tutorial_v*
 .DS_Store
 
 cmake-build-debug/
+.idea/
