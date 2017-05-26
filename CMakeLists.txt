@@ -57,14 +57,20 @@ add_definitions(
 )
 
 
-# set(EXECUTABLE_OUTPUT_PATH  ${CMAKE_CURRENT_SOURCE_DIR})
+set(EXECUTABLE_OUTPUT_PATH  ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 
 # Tutorial 1
 add_executable(main
 	main.cpp
-)
+    common/shader.hpp
+    common/shader.cpp
+
+        VertexShader.vs
+        FragmentShader.fs
+
+        )
 target_link_libraries(main
 	${ALL_LIBS}
 )
