@@ -85,6 +85,7 @@ int main( void )
         // Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
         glClear( GL_COLOR_BUFFER_BIT );
 
+<<<<<<< HEAD
 
         glUseProgram(programID);
 
@@ -94,6 +95,8 @@ int main( void )
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glDisableVertexAttribArray(0);
 
+=======
+>>>>>>> 8b0bd0c72042a7bcf7536d2990e305e9c16f6e62
 
         // Swap buffers
         glfwSwapBuffers(window);
