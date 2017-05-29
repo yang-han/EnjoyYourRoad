@@ -17,5 +17,4 @@ cmake-build-debug/
 a.md
 *.obj
 *.jpg
-*.DDS
 *.bmp
