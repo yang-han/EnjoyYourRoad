@@ -64,13 +64,22 @@ add_definitions(
 # Tutorial 1
 add_executable(main
 	main.cpp
-    common/shader.hpp
     common/shader.cpp
+    common/shader.hpp
+    common/controls.cpp
+    common/controls.hpp
+    common/texture.cpp
+    common/texture.hpp
+    common/objloader.cpp
+    common/objloader.hpp
+    common/vboindexer.cpp
+    common/vboindexer.hpp
 
-        VertexShader.vs
-        FragmentShader.fs
 
-        )
+    VertexShader.vs
+	FragmentShader.fs
+
+)
 target_link_libraries(main
 	${ALL_LIBS}
 )
