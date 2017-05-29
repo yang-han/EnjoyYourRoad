@@ -66,7 +66,7 @@ int main( void )
     glfwSetCursorPos(window, 1024/2, 768/2);
 
     // Dark blue background
-    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
@@ -98,7 +98,7 @@ int main( void )
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
-    bool res = loadOBJ("../suzanne.obj", vertices, uvs, normals);
+    bool res = loadOBJ("../plane1.obj", vertices, uvs, normals);
 
     std::vector<unsigned short> indices;
     std::vector<glm::vec3> indexed_vertices;
@@ -142,8 +142,9 @@ int main( void )
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-    glm::vec3 myRotateAxis(0,1,0);
-    glm::mat4 RotationMatrix = glm::rotate(glm::mat4(1.0f), 3.14f, myRotateAxis);
+    glm::vec3 SceneMyRotateAxis(0,1,0);
+    glm::mat4 SceneRotationMatrix = glm::rotate(glm::mat4(1.0f), 3.14f, SceneMyRotateAxis);
+    glm::mat4 SceneTransformMatrix = glm::translate(SceneRotationMatrix, glm::vec3(0,-2,0));
 
     do{
 
@@ -167,7 +168,7 @@ int main( void )
         computeMatricesFromInputs();
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();
-        glm::mat4 ModelMatrix = RotationMatrix;
+        glm::mat4 ModelMatrix = SceneTransformMatrix;
         glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
         // Send our transformation to the currently bound shader,
@@ -176,7 +177,7 @@ int main( void )
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
         glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
-        glm::vec3 lightPos = glm::vec3(4,4,4);
+        glm::vec3 lightPos = glm::vec3(0, 20, 0);
         glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
         // Bind our texture in Texture Unit 0

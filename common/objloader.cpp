@@ -37,9 +37,10 @@ bool loadOBJ(
 		getchar();
 		return false;
 	}
+    //int i = 0;
 
 	while( 1 ){
-
+        //++i;
 		char lineHeader[128];
 		// read the first word of the line
 		int res = fscanf(file, "%s", lineHeader);
