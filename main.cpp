@@ -21,6 +21,57 @@ using namespace glm;
 #include <common/objloader.hpp>
 #include <common/vboindexer.hpp>
 
+
+void render_a_obj(GLuint vertexbuffer, GLuint uvbuffer, GLuint normalbuffer, GLuint elementbuffer, GLsizei indices_size){
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glVertexAttribPointer(
+            0,                  // attribute
+            3,                  // size
+            GL_FLOAT,           // type
+            GL_FALSE,           // normalized?
+            0,                  // stride
+            (void*)0            // array buffer offset
+    );
+
+    // 2nd attribute buffer : UVs
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+    glVertexAttribPointer(
+            1,                                // attribute
+            2,                                // size
+            GL_FLOAT,                         // type
+            GL_FALSE,                         // normalized?
+            0,                                // stride
+            (void*)0                          // array buffer offset
+    );
+
+    // 3rd attribute buffer : normals
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+    glVertexAttribPointer(
+            2,                                // attribute
+            3,                                // size
+            GL_FLOAT,                         // type
+            GL_FALSE,                         // normalized?
+            0,                                // stride
+            (void*)0                          // array buffer offset
+    );
+
+    // Index buffer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+
+    // Draw the triangles !
+    glDrawElements(
+            GL_TRIANGLES,      // mode
+            (GLsizei)indices_size,    // count
+            GL_UNSIGNED_SHORT, // type
+            (void*)0           // element array buffer offset
+    );
+
+}
+
+
 int main( void )
 {
     // Initialise GLFW
@@ -76,9 +127,24 @@ int main( void )
     // Cull triangles which normal is not towards the camera
     //glEnable(GL_CULL_FACE); // Not this time !
 
+    glEnable(GL_CULL_FACE);
+
+
+
+
+
+
+
+
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
+
+    GLuint BikeVertexArrayID;
+    glGenVertexArrays(1, &BikeVertexArrayID);
+    glBindVertexArray(BikeVertexArrayID);
+
+
 
     // Create and compile our GLSL program from the shaders
     GLuint programID = LoadShaders( "../VertexShader.vs", "../FragmentShader.fs" );
@@ -94,18 +160,34 @@ int main( void )
     // Get a handle for our "myTextureSampler" uniform
     GLint TextureID = glGetUniformLocation(programID, "myTextureSampler");
 
+
+
+
     // Read our .obj file
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
     bool res = loadOBJ("../plane1.obj", vertices, uvs, normals);
 
+
+    std::vector<glm::vec3> bike_vertices;
+    std::vector<glm::vec2> bike_uvs;
+    std::vector<glm::vec3> bikes_normals;
+    bool bike_res = loadOBJ("../bike.obj", bike_vertices, bike_uvs, bikes_normals);
+
+    std::vector<unsigned short> bike_indices;
+    std::vector<glm::vec3> indexed_bike_vertices;
+    std::vector<glm::vec2> indexed_bike_uvs;
+    std::vector<glm::vec3> indexed_bike_normals;
+    indexVBO(bike_vertices, bike_uvs, bikes_normals, bike_indices, indexed_bike_vertices, indexed_bike_uvs, indexed_bike_normals);
+
+
+
     std::vector<unsigned short> indices;
     std::vector<glm::vec3> indexed_vertices;
     std::vector<glm::vec2> indexed_uvs;
     std::vector<glm::vec3> indexed_normals;
     indexVBO(vertices, uvs, normals, indices, indexed_vertices, indexed_uvs, indexed_normals);
-
     // Load it into a VBO
 
     GLuint vertexbuffer;
@@ -129,6 +211,34 @@ int main( void )
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
 
+
+    GLuint bike_vertexbuffer;
+    glGenBuffers(1, &bike_vertexbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, bike_vertexbuffer);
+    glBufferData(GL_ARRAY_BUFFER, indexed_bike_vertices.size() * sizeof(glm::vec3), &indexed_bike_vertices[0], GL_STATIC_DRAW);
+
+    GLuint bike_uvbuffer;
+    glGenBuffers(1, &bike_uvbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, bike_uvbuffer);
+    glBufferData(GL_ARRAY_BUFFER, indexed_bike_uvs.size() * sizeof(glm::vec2), &indexed_bike_uvs[0], GL_STATIC_DRAW);
+
+    GLuint bike_normalbuffer;
+    glGenBuffers(1, &bike_normalbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, bike_normalbuffer);
+    glBufferData(GL_ARRAY_BUFFER, indexed_bike_normals.size() * sizeof(glm::vec3), &indexed_bike_normals[0], GL_STATIC_DRAW);
+
+    // Generate a buffer for the indices as well
+    GLuint bike_elementbuffer;
+    glGenBuffers(1, &bike_elementbuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bike_elementbuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, bike_indices.size() * sizeof(unsigned short), &bike_indices[0], GL_STATIC_DRAW);
+
+
+
+
+
+
+
     // Get a handle for our "LightPosition" uniform
     glUseProgram(programID);
     GLint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
@@ -141,10 +251,18 @@ int main( void )
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    glm::mat4 BikeScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f));
 
-    glm::vec3 SceneMyRotateAxis(0,1,0);
-    glm::mat4 SceneRotationMatrix = glm::rotate(glm::mat4(1.0f), 3.14f, SceneMyRotateAxis);
-    glm::mat4 SceneTransformMatrix = glm::translate(SceneRotationMatrix, glm::vec3(0,-2,0));
+
+//    glm::vec3 SceneMyRotateAxis(0,1,0);
+//    glm::mat4 SceneRotationMatrix = glm::rotate(glm::mat4(1.0f), 3.14f, SceneMyRotateAxis);
+    glm::mat4 SceneRotationMatrix = glm::mat4(1.0f);
+    glm::mat4 SceneTransformMatrix = glm::translate(SceneRotationMatrix, glm::vec3(0,-3,0));
+
+//    glm::vec3 BikeRotateAxis(0,1,0);
+//    glm::mat4 BikeRotateMatrix = glm::rotate(glm::mat4(1.0f), 3.14f, BikeRotateAxis);
+    glm::mat4 BikeRotateMatrix = glm::mat4(1.0f);
+    glm::mat4 BikeTransformMatrix = glm::translate(BikeRotateMatrix, glm::vec3(0,-2,0));
 
     do{
 
@@ -164,6 +282,9 @@ int main( void )
         // Use our shader
         glUseProgram(programID);
 
+
+        glm::mat4 BikeModelMatrix = BikeTransformMatrix * BikeScaleMatrix;
+
         // Compute the MVP matrix from keyboard and mouse input
         computeMatricesFromInputs();
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
@@ -171,13 +292,15 @@ int main( void )
         glm::mat4 ModelMatrix = SceneTransformMatrix;
         glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
+        glm::mat4 bike_MVP = ProjectionMatrix * ViewMatrix * BikeModelMatrix;
+
         // Send our transformation to the currently bound shader,
         // in the "MVP" uniform
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
         glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
-        glm::vec3 lightPos = glm::vec3(0, 20, 0);
+        glm::vec3 lightPos = glm::vec3(5, 20, 10);
         glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
         // Bind our texture in Texture Unit 0
@@ -185,57 +308,70 @@ int main( void )
         glBindTexture(GL_TEXTURE_2D, Texture);
         // Set our "myTextureSampler" sampler to user Texture Unit 0
         glUniform1i(TextureID, 0);
+//
+//        // 1rst attribute buffer : vertices
+//        glEnableVertexAttribArray(0);
+//        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+//        glVertexAttribPointer(
+//                0,                  // attribute
+//                3,                  // size
+//                GL_FLOAT,           // type
+//                GL_FALSE,           // normalized?
+//                0,                  // stride
+//                (void*)0            // array buffer offset
+//        );
+//
+//        // 2nd attribute buffer : UVs
+//        glEnableVertexAttribArray(1);
+//        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+//        glVertexAttribPointer(
+//                1,                                // attribute
+//                2,                                // size
+//                GL_FLOAT,                         // type
+//                GL_FALSE,                         // normalized?
+//                0,                                // stride
+//                (void*)0                          // array buffer offset
+//        );
+//
+//        // 3rd attribute buffer : normals
+//        glEnableVertexAttribArray(2);
+//        glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+//        glVertexAttribPointer(
+//                2,                                // attribute
+//                3,                                // size
+//                GL_FLOAT,                         // type
+//                GL_FALSE,                         // normalized?
+//                0,                                // stride
+//                (void*)0                          // array buffer offset
+//        );
+//
+//        // Index buffer
+//        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+//
+//        // Draw the triangles !
+//        glDrawElements(
+//                GL_TRIANGLES,      // mode
+//                (GLsizei)indices.size(),    // count
+//                GL_UNSIGNED_SHORT, // type
+//                (void*)0           // element array buffer offset
+//        );
 
-        // 1rst attribute buffer : vertices
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glVertexAttribPointer(
-                0,                  // attribute
-                3,                  // size
-                GL_FLOAT,           // type
-                GL_FALSE,           // normalized?
-                0,                  // stride
-                (void*)0            // array buffer offset
-        );
 
-        // 2nd attribute buffer : UVs
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-        glVertexAttribPointer(
-                1,                                // attribute
-                2,                                // size
-                GL_FLOAT,                         // type
-                GL_FALSE,                         // normalized?
-                0,                                // stride
-                (void*)0                          // array buffer offset
-        );
+        render_a_obj(vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei)indices.size());
 
-        // 3rd attribute buffer : normals
-        glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-        glVertexAttribPointer(
-                2,                                // attribute
-                3,                                // size
-                GL_FLOAT,                         // type
-                GL_FALSE,                         // normalized?
-                0,                                // stride
-                (void*)0                          // array buffer offset
-        );
+        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &bike_MVP[0][0]);
+        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &BikeModelMatrix[0][0]);
+        glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
-        // Index buffer
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+        render_a_obj(bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, (GLsizei)bike_indices.size());
 
-        // Draw the triangles !
-        glDrawElements(
-                GL_TRIANGLES,      // mode
-                (GLsizei)indices.size(),    // count
-                GL_UNSIGNED_SHORT, // type
-                (void*)0           // element array buffer offset
-        );
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
+
+
+
 
         // Swap buffers
         glfwSwapBuffers(window);
