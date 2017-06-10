@@ -264,6 +264,8 @@ int main( void )
     glm::mat4 BikeRotateMatrix = glm::mat4(1.0f);
     glm::mat4 BikeTransformMatrix = glm::translate(BikeRotateMatrix, glm::vec3(0,-2,0));
     glm::mat4 BikeModelMatrix = BikeTransformMatrix * BikeScaleMatrix;
+    glm::mat4 BaseBikeModelMatrix = BikeModelMatrix;
+    glm::mat4 BikeMotionMatrix = glm::mat4(1.0f);
 
     do{
 
@@ -286,8 +288,9 @@ int main( void )
 
 
         // Compute the MVP matrix from keyboard and mouse input
-        computeMatricesFromInputs(BikeModelMatrix);
+        glm::mat4 bike_rotate_matrix = computeMatricesFromInputs(BikeMotionMatrix);
 
+        BikeModelMatrix = BikeMotionMatrix * bike_rotate_matrix * BaseBikeModelMatrix;
 
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();

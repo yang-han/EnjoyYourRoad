@@ -11,6 +11,8 @@ using namespace glm;
 
 #include "controls.hpp"
 
+#define PI 3.1415926535f
+
 glm::mat4 ViewMatrix;
 glm::mat4 ProjectionMatrix;
 
@@ -38,17 +40,23 @@ float speed = 3.0f; // 3 units / second
 float mouseSpeed = 0.005f;
 float motion_speed = 3.3f;
 
-float motion_horizonal_angle = 3.14f;
+float motion_horizonal_angle = 0;
 float motion_vertical_angle = 0.0f;
 
 
+glm::vec3 yAxis = glm::vec3(0,1,0);
+glm::vec3 zAxis = glm::vec3(0,0,1);
+
 glm::vec3 operator*(double m, glm::vec3& v){
-    return glm::vec3(m*v.x, m*v.y, m*v.z);
+	return glm::vec3(m*v.x, m*v.y, m*v.z);
+}
+glm::vec3 operator*(glm::vec3 v1, glm::vec3& v2){
+	return glm::vec3(v1.x*v2.x, v1.y*v2.y, v1.z*v2.z);
 }
 
-void computeMatricesFromInputs(glm::mat4& BikeModelMatrix){
+glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
     static int init_flag = 0;
-    ++init_flag;
+    if(init_flag < 100)++init_flag;
 	// glfwGetTime is called only once, the first time this function is called
 	static double lastTime = glfwGetTime();
 
@@ -85,9 +93,9 @@ void computeMatricesFromInputs(glm::mat4& BikeModelMatrix){
 
 	// Right vector
 	glm::vec3 right = glm::vec3(
-			sin(horizontalAngle - 3.14f/2.0f),
+			sin(horizontalAngle - PI/2.0f),
 			0,
-			cos(horizontalAngle - 3.14f/2.0f)
+			cos(horizontalAngle - PI/2.0f)
 	);
 
 	// Up vector
@@ -100,20 +108,20 @@ void computeMatricesFromInputs(glm::mat4& BikeModelMatrix){
     );
 
     motion_right = glm::vec3(
-            sin(motion_horizonal_angle - 3.14f/2.0f),
+            sin(motion_horizonal_angle - PI/2.0f),
             0,
-            cos(motion_horizonal_angle - 3.14f/2.0f)
+            cos(motion_horizonal_angle - PI/2.0f)
     );
 
     glm::vec3 delta_position = glm::vec3(0.0f);
 
     // Move forward
 	if (glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
-		delta_position += motion_direction * deltaTime * speed;
+		delta_position -= motion_direction * deltaTime * speed;
     }
 	// Move backward
 	if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
-		delta_position -= motion_direction * deltaTime * speed;
+		delta_position += motion_direction * deltaTime * speed;
     }
 
 //    motion_direction = glm::vec3(
@@ -126,18 +134,18 @@ void computeMatricesFromInputs(glm::mat4& BikeModelMatrix){
 //
 	// Strafe right
 	if (glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS){
-		delta_position += motion_right * deltaTime * speed;
-        motion_horizonal_angle += 0.01f;
+//		delta_position -= motion_right * deltaTime * speed;
+		if(motion_horizonal_angle > -1.0f*PI)motion_horizonal_angle -= 0.01f;
     }
 	// Strafe left
 	if (glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
-		delta_position -= motion_right * deltaTime * speed;
-        motion_horizonal_angle -= 0.01f;
+//		delta_position += motion_right * deltaTime * speed;
+		if(motion_horizonal_angle < PI)motion_horizonal_angle += 0.01f;
     }
+	std::cout << motion_horizonal_angle << std::endl;
+	glm::mat4 rotateMatrix = glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis);
+    BikeTransformMatrix = glm::translate(BikeTransformMatrix, delta_position);
 
-
-    std::cout << delta_position.x << " " << delta_position.y << " " << delta_position.z << std::endl;
-    BikeModelMatrix = glm::translate(BikeModelMatrix, motion_speed*delta_position);
 //    std::cout << BikeModelMatrix <<std::endl;
     position += delta_position;
 
@@ -158,4 +166,5 @@ void computeMatricesFromInputs(glm::mat4& BikeModelMatrix){
 
 	// For the next frame, the "last time" will be "now"
 	lastTime = currentTime;
+	return rotateMatrix;
 }
