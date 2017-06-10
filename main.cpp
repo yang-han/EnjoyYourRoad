@@ -71,6 +71,51 @@ void render_a_obj(GLuint vertexbuffer, GLuint uvbuffer, GLuint normalbuffer, GLu
 
 }
 
+void prepareObj(GLuint& VertexArrayID,
+
+                GLuint& vertexbuffer,
+                GLuint& uvbuffer,
+                GLuint& normalbuffer,
+                GLuint& elementbuffer,
+
+                const char * path,
+                std::vector<glm::vec3> & vertices,
+                std::vector<glm::vec2> & uvs,
+                std::vector<glm::vec3> & normals,
+
+                std::vector<unsigned short> & indices,
+                std::vector<glm::vec3> & indexed_vertices,
+                std::vector<glm::vec2> & indexed_uvs,
+                std::vector<glm::vec3> & indexed_normals)
+{
+
+    glGenVertexArrays(1, &VertexArrayID);
+    glBindVertexArray(VertexArrayID);
+    bool res = loadOBJ(path, vertices, uvs, normals);
+    indexVBO(vertices, uvs, normals, indices, indexed_vertices, indexed_uvs, indexed_normals);
+    glGenBuffers(1, &vertexbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(glm::vec3), &indexed_vertices[0], GL_STATIC_DRAW);
+
+//    GLuint uvbuffer;
+    glGenBuffers(1, &uvbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+    glBufferData(GL_ARRAY_BUFFER, indexed_uvs.size() * sizeof(glm::vec2), &indexed_uvs[0], GL_STATIC_DRAW);
+
+//    GLuint normalbuffer;
+    glGenBuffers(1, &normalbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+    glBufferData(GL_ARRAY_BUFFER, indexed_normals.size() * sizeof(glm::vec3), &indexed_normals[0], GL_STATIC_DRAW);
+
+    // Generate a buffer for the indices as well
+    glGenBuffers(1, &elementbuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
+
+
+}
+
+
 
 int main( void )
 {
@@ -132,20 +177,6 @@ int main( void )
 
 
 
-
-
-
-
-    GLuint VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
-
-    GLuint BikeVertexArrayID;
-    glGenVertexArrays(1, &BikeVertexArrayID);
-    glBindVertexArray(BikeVertexArrayID);
-
-
-
     // Create and compile our GLSL program from the shaders
     GLuint programID = LoadShaders( "../VertexShader.vs", "../FragmentShader.fs" );
 
@@ -161,81 +192,37 @@ int main( void )
     GLint TextureID = glGetUniformLocation(programID, "myTextureSampler");
 
 
-
-
-    // Read our .obj file
+    GLuint VertexArrayID;
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
-    std::vector<glm::vec3> normals;
-    bool res = loadOBJ("../plane1.obj", vertices, uvs, normals);
-
-
-    std::vector<glm::vec3> bike_vertices;
-    std::vector<glm::vec2> bike_uvs;
-    std::vector<glm::vec3> bikes_normals;
-    bool bike_res = loadOBJ("../bike.obj", bike_vertices, bike_uvs, bikes_normals);
-
-    std::vector<unsigned short> bike_indices;
-    std::vector<glm::vec3> indexed_bike_vertices;
-    std::vector<glm::vec2> indexed_bike_uvs;
-    std::vector<glm::vec3> indexed_bike_normals;
-    indexVBO(bike_vertices, bike_uvs, bikes_normals, bike_indices, indexed_bike_vertices, indexed_bike_uvs, indexed_bike_normals);
-
-
-
+    std::vector<glm::vec3> normals;GLuint vertexbuffer;
+    GLuint uvbuffer;
+    GLuint normalbuffer;
+    GLuint elementbuffer;
     std::vector<unsigned short> indices;
     std::vector<glm::vec3> indexed_vertices;
     std::vector<glm::vec2> indexed_uvs;
     std::vector<glm::vec3> indexed_normals;
-    indexVBO(vertices, uvs, normals, indices, indexed_vertices, indexed_uvs, indexed_normals);
-    // Load it into a VBO
-
-    GLuint vertexbuffer;
-    glGenBuffers(1, &vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(glm::vec3), &indexed_vertices[0], GL_STATIC_DRAW);
-
-    GLuint uvbuffer;
-    glGenBuffers(1, &uvbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_uvs.size() * sizeof(glm::vec2), &indexed_uvs[0], GL_STATIC_DRAW);
-
-    GLuint normalbuffer;
-    glGenBuffers(1, &normalbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_normals.size() * sizeof(glm::vec3), &indexed_normals[0], GL_STATIC_DRAW);
-
-    // Generate a buffer for the indices as well
-    GLuint elementbuffer;
-    glGenBuffers(1, &elementbuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
+    prepareObj(VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, "../plane1.obj",
+               vertices, uvs, normals,
+               indices, indexed_vertices, indexed_uvs, indexed_normals);
 
 
+    GLuint BikeVertexArrayID;
+    std::vector<glm::vec3> bike_vertices;
+    std::vector<glm::vec2> bike_uvs;
+    std::vector<glm::vec3> bike_normals;
+    std::vector<unsigned short> bike_indices;
+    std::vector<glm::vec3> indexed_bike_vertices;
+    std::vector<glm::vec2> indexed_bike_uvs;
+    std::vector<glm::vec3> indexed_bike_normals;
     GLuint bike_vertexbuffer;
-    glGenBuffers(1, &bike_vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, bike_vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_bike_vertices.size() * sizeof(glm::vec3), &indexed_bike_vertices[0], GL_STATIC_DRAW);
-
     GLuint bike_uvbuffer;
-    glGenBuffers(1, &bike_uvbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, bike_uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_bike_uvs.size() * sizeof(glm::vec2), &indexed_bike_uvs[0], GL_STATIC_DRAW);
-
     GLuint bike_normalbuffer;
-    glGenBuffers(1, &bike_normalbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, bike_normalbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_bike_normals.size() * sizeof(glm::vec3), &indexed_bike_normals[0], GL_STATIC_DRAW);
-
-    // Generate a buffer for the indices as well
     GLuint bike_elementbuffer;
-    glGenBuffers(1, &bike_elementbuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bike_elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, bike_indices.size() * sizeof(unsigned short), &bike_indices[0], GL_STATIC_DRAW);
-
-
-
-
+    prepareObj(BikeVertexArrayID, bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, "../bike.obj",
+               bike_vertices, bike_uvs, bike_normals,
+               bike_indices, indexed_bike_vertices, indexed_bike_uvs, indexed_bike_normals);
 
 
 
