@@ -263,6 +263,7 @@ int main( void )
 //    glm::mat4 BikeRotateMatrix = glm::rotate(glm::mat4(1.0f), 3.14f, BikeRotateAxis);
     glm::mat4 BikeRotateMatrix = glm::mat4(1.0f);
     glm::mat4 BikeTransformMatrix = glm::translate(BikeRotateMatrix, glm::vec3(0,-2,0));
+    glm::mat4 BikeModelMatrix = BikeTransformMatrix * BikeScaleMatrix;
 
     do{
 
@@ -283,21 +284,24 @@ int main( void )
         glUseProgram(programID);
 
 
-        glm::mat4 BikeModelMatrix = BikeTransformMatrix * BikeScaleMatrix;
 
         // Compute the MVP matrix from keyboard and mouse input
-        computeMatricesFromInputs();
+        computeMatricesFromInputs(BikeModelMatrix);
+
+
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();
-        glm::mat4 ModelMatrix = SceneTransformMatrix;
-        glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+        glm::mat4 SceneModelMatrix = SceneTransformMatrix;
+
+        glm::mat4 MVP = ProjectionMatrix * ViewMatrix * SceneModelMatrix;
 
         glm::mat4 bike_MVP = ProjectionMatrix * ViewMatrix * BikeModelMatrix;
 
         // Send our transformation to the currently bound shader,
         // in the "MVP" uniform
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
+        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &SceneModelMatrix[0][0]);
         glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
         glm::vec3 lightPos = glm::vec3(5, 20, 10);
@@ -308,54 +312,6 @@ int main( void )
         glBindTexture(GL_TEXTURE_2D, Texture);
         // Set our "myTextureSampler" sampler to user Texture Unit 0
         glUniform1i(TextureID, 0);
-//
-//        // 1rst attribute buffer : vertices
-//        glEnableVertexAttribArray(0);
-//        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-//        glVertexAttribPointer(
-//                0,                  // attribute
-//                3,                  // size
-//                GL_FLOAT,           // type
-//                GL_FALSE,           // normalized?
-//                0,                  // stride
-//                (void*)0            // array buffer offset
-//        );
-//
-//        // 2nd attribute buffer : UVs
-//        glEnableVertexAttribArray(1);
-//        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-//        glVertexAttribPointer(
-//                1,                                // attribute
-//                2,                                // size
-//                GL_FLOAT,                         // type
-//                GL_FALSE,                         // normalized?
-//                0,                                // stride
-//                (void*)0                          // array buffer offset
-//        );
-//
-//        // 3rd attribute buffer : normals
-//        glEnableVertexAttribArray(2);
-//        glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-//        glVertexAttribPointer(
-//                2,                                // attribute
-//                3,                                // size
-//                GL_FLOAT,                         // type
-//                GL_FALSE,                         // normalized?
-//                0,                                // stride
-//                (void*)0                          // array buffer offset
-//        );
-//
-//        // Index buffer
-//        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-//
-//        // Draw the triangles !
-//        glDrawElements(
-//                GL_TRIANGLES,      // mode
-//                (GLsizei)indices.size(),    // count
-//                GL_UNSIGNED_SHORT, // type
-//                (void*)0           // element array buffer offset
-//        );
-
 
         render_a_obj(vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei)indices.size());
 
@@ -369,8 +325,6 @@ int main( void )
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
-
-
 
 
         // Swap buffers
