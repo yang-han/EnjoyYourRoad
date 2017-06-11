@@ -21,6 +21,7 @@ using namespace glm;
 #include <common/objloader.hpp>
 #include <common/vboindexer.hpp>
 
+#include <terrain.hpp>
 
 void render_a_obj(GLuint vertexbuffer, GLuint uvbuffer, GLuint normalbuffer, GLuint elementbuffer, GLsizei indices_size){
     glEnableVertexAttribArray(0);
@@ -91,7 +92,11 @@ void prepareObj(GLuint& VertexArrayID,
 
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
-    bool res = loadOBJ(path, vertices, uvs, normals);
+    if(path== nullptr){
+        generateTerrain(100,100,vertices,uvs,normals);
+    }else{
+        bool res = loadOBJ(path, vertices, uvs, normals);
+    }
     indexVBO(vertices, uvs, normals, indices, indexed_vertices, indexed_uvs, indexed_normals);
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -203,10 +208,9 @@ int main( void )
     std::vector<glm::vec3> indexed_vertices;
     std::vector<glm::vec2> indexed_uvs;
     std::vector<glm::vec3> indexed_normals;
-    prepareObj(VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, "../plane1.obj",
+    prepareObj(VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, nullptr,
                vertices, uvs, normals,
                indices, indexed_vertices, indexed_uvs, indexed_normals);
-
 
     GLuint BikeVertexArrayID;
     std::vector<glm::vec3> bike_vertices;
@@ -223,6 +227,24 @@ int main( void )
     prepareObj(BikeVertexArrayID, bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, "../bike.obj",
                bike_vertices, bike_uvs, bike_normals,
                bike_indices, indexed_bike_vertices, indexed_bike_uvs, indexed_bike_normals);
+    setAABB(bike_vertices,CHARACTER);
+
+    GLuint testVertexArrayID;
+    std::vector<glm::vec3> test_vertices;
+    std::vector<glm::vec2> test_uvs;
+    std::vector<glm::vec3> test_normals;
+    std::vector<unsigned short> test_indices;
+    std::vector<glm::vec3> indexed_test_vertices;
+    std::vector<glm::vec2> indexed_test_uvs;
+    std::vector<glm::vec3> indexed_test_normals;
+    GLuint test_vertexbuffer;
+    GLuint test_uvbuffer;
+    GLuint test_normalbuffer;
+    GLuint test_elementbuffer;
+    prepareObj(testVertexArrayID, test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, "../testobject1.obj",
+               test_vertices, test_uvs, test_normals,
+               test_indices, indexed_test_vertices, indexed_test_uvs, indexed_test_normals);
+    setAABB(test_vertices,OBJECT);
 
 
 
@@ -244,12 +266,12 @@ int main( void )
 //    glm::vec3 SceneMyRotateAxis(0,1,0);
 //    glm::mat4 SceneRotationMatrix = glm::rotate(glm::mat4(1.0f), 3.14f, SceneMyRotateAxis);
     glm::mat4 SceneRotationMatrix = glm::mat4(1.0f);
-    glm::mat4 SceneTransformMatrix = glm::translate(SceneRotationMatrix, glm::vec3(0,-3,0));
+    glm::mat4 SceneTransformMatrix = glm::translate(SceneRotationMatrix, glm::vec3(0,-1,0));
 
 //    glm::vec3 BikeRotateAxis(0,1,0);
 //    glm::mat4 BikeRotateMatrix = glm::rotate(glm::mat4(1.0f), 3.14f, BikeRotateAxis);
-    glm::mat4 BikeRotateMatrix = glm::mat4(1.0f);
-    glm::mat4 BikeTransformMatrix = glm::translate(BikeRotateMatrix, glm::vec3(0,-2,0));
+//    glm::mat4 BikeRotateMatrix = glm::mat4(1.0f);
+    glm::mat4 BikeTransformMatrix = glm::mat4(1.0f);
     glm::mat4 BikeModelMatrix = BikeTransformMatrix * BikeScaleMatrix;
     glm::mat4 BaseBikeModelMatrix = BikeModelMatrix;
     glm::mat4 BikeMotionMatrix = glm::mat4(1.0f);
@@ -304,6 +326,7 @@ int main( void )
         glUniform1i(TextureID, 0);
 
         render_a_obj(vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei)indices.size());
+        render_a_obj(test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
 
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &bike_MVP[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &BikeModelMatrix[0][0]);

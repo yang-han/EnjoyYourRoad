@@ -10,6 +10,7 @@ extern GLFWwindow* window; // The "extern" keyword here is to access the variabl
 using namespace glm;
 
 #include "controls.hpp"
+#include "aabb.hpp"
 
 #define PI 3.1415926f
 
@@ -25,7 +26,7 @@ glm::mat4 getProjectionMatrix(){
 
 
 // Initial position : on +Z
-glm::vec3 position = glm::vec3( 0, 0, 5 );
+glm::vec3 position = glm::vec3( 0, 3, 5 );
 
 glm::vec3 motion_direction = glm::vec3(0,0,-1);
 glm::vec3 motion_right;
@@ -51,6 +52,34 @@ glm::vec3 operator*(double m, glm::vec3& v){
 }
 glm::vec3 operator*(glm::vec3 v1, glm::vec3& v2){
 	return glm::vec3(v1.x*v2.x, v1.y*v2.y, v1.z*v2.z);
+}
+
+AABB character;
+AABB object[100];
+int topid = 0;
+void setAABB ( std::vector<glm::vec3> & vertices, int type, glm::mat4 trans ){
+	glm::vec3 *v;
+	v = new glm::vec3[vertices.size ( )];
+	for ( int i = 0; i < vertices.size ( ); i++ ){
+		v[i] = vertices[i];
+	}
+	//printf ( "size=%d\n", vertices.size ( ) );
+	if ( type == CHARACTER ){
+		character.updateMinMax (v, (int)vertices.size());
+	}
+	if ( type == OBJECT ){
+		object[topid].updateMinMax (v, (int)vertices.size() );
+		topid++;
+	}
+}
+bool checkCollide ( glm::vec3 m ){
+	for ( int i = 0; i < topid; i++ ){
+		if ( character.translate ( m ).collide ( object[i] ) ){
+			// printf ( "collide!\n" );
+			return true;
+		}
+	}
+	return false;
 }
 
 glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
@@ -117,11 +146,13 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 
     // Move forward
 	if (glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
-		delta_position -= motion_direction * deltaTime * speed;
+		if ( !checkCollide ( -motion_direction * deltaTime * speed ) )
+			delta_position -= motion_direction * deltaTime * speed;
     }
 	// Move backward
 	if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
-		delta_position += motion_direction * deltaTime * speed;
+		if ( !checkCollide ( motion_direction * deltaTime * speed ) )
+			delta_position += motion_direction * deltaTime * speed;
     }
 
 //    motion_direction = glm::vec3(
@@ -135,21 +166,23 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 	// Strafe right
 	if (glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS){
 //		delta_position -= motion_right * deltaTime * speed;
-		if(motion_horizonal_angle > -1.0f*PI)motion_horizonal_angle -= 0.01f;
+//		if(motion_horizonal_angle > -1.0f*PI)
+            motion_horizonal_angle -= 0.01f;
 		rotateMatrix = glm::rotate(rotateMatrix, PI/-7.0f, motion_direction);
     }
 	// Strafe left
 	if (glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
 //		delta_position += motion_right * deltaTime * speed;
-		if(motion_horizonal_angle < PI)motion_horizonal_angle += 0.01f;
+//		if(motion_horizonal_angle < PI)
+            motion_horizonal_angle += 0.01f;
 		rotateMatrix = glm::rotate(rotateMatrix, PI/7.0f, motion_direction);
     }
-	std::cout << motion_horizonal_angle << std::endl;
+//	std::cout << motion_horizonal_angle << std::endl;
 	rotateMatrix = glm::rotate(rotateMatrix, motion_horizonal_angle, yAxis);
     BikeTransformMatrix = glm::translate(BikeTransformMatrix, delta_position);
-
+	character.translater(delta_position);
 //    std::cout << BikeModelMatrix <<std::endl;
-    position += delta_position;
+    position = glm::vec3(BikeTransformMatrix*glm::vec4(1,1,1,1)) + glm::vec3(-2.0f,3.0f,0.0f) + motion_direction * 8.0f;
 
 //    std::cout << motion_direction.x << std::endl;
 //    std::cout << (delta_position*motion_direction).x << std::endl;
@@ -157,7 +190,7 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 
 	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.
 
-	// Projection matrix : 45� Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+	// Projection matrix : 45 Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 0.1f, 200.0f);
 	// Camera matrix
 	ViewMatrix       = glm::lookAt(

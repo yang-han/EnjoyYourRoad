@@ -75,6 +75,10 @@ add_executable(main
     common/vboindexer.cpp
     common/vboindexer.hpp
 
+	aabb.cpp
+	aabb.hpp
+    terrain.hpp
+    terrain.cpp
 
     VertexShader.vs
 	FragmentShader.fs
