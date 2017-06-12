@@ -246,8 +246,8 @@ int main( void )
     GLint ModelMatrixID = glGetUniformLocation(programID, "M");
 
     // Load the texture
-    GLuint Texture = loadDDS("../uvmap.DDS");
-    GLuint BikeTexture = loadDDS("../outUV.dds");
+    GLuint Texture = loadDDS("../dsb.DDS");
+    GLuint BikeTexture = loadDDS("../norm.dds");
 
     // Get a handle for our "myTextureSampler" uniform
     GLint TextureID = glGetUniformLocation(programID, "myTextureSampler");
@@ -354,7 +354,7 @@ int main( void )
 //    glm::vec3 SceneMyRotateAxis(0,1,0);
 //    glm::mat4 SceneRotationMatrix = glm::rotate(glm::mat4(1.0f), 3.14f, SceneMyRotateAxis);
     glm::mat4 SceneRotationMatrix = glm::mat4(1.0f);
-    glm::mat4 SceneTransformMatrix = glm::translate(SceneRotationMatrix, glm::vec3(0,-1,0));
+    glm::mat4 SceneTransformMatrix = glm::translate(SceneRotationMatrix, glm::vec3(0,0,0));
 
 //    glm::vec3 BikeRotateAxis(0,1,0);
 //    glm::mat4 BikeRotateMatrix = glm::rotate(glm::mat4(1.0f), 3.14f, BikeRotateAxis);

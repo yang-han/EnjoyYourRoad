@@ -1,6 +1,7 @@
 
 #include <glm/glm.hpp>
 #include <stdio.h>
+#include <math.h>
 #include "aabb.hpp"
 
 glm::vec3 AABB::getCenter ( ){
@@ -39,15 +40,13 @@ void AABB::updateMinMax ( const glm::vec3 *point, int num ){
 		if ( point[i].z > pmax.z )
 			pmax.z = point[i].z;
 	}
-	printf ( "pmin=(%f,%f,%f),pmax=(%f,%f,%f)\n", pmin.x, pmin.y, pmin.z, pmax.x, pmax.y, pmax.z );
+	//printf ( "pmin=(%f,%f,%f),pmax=(%f,%f,%f)\n", pmin.x, pmin.y, pmin.z, pmax.x, pmax.y, pmax.z );
 }
 
 AABB AABB::transform ( const glm::mat4& mat ){
 	glm::vec3 corners[8];
 	AABB trans ( this->pmin, this->pmax );
 	trans.getCorners ( corners );
-	int x, y, z, h;
-	//����任  
 	for ( int i = 0; i < 8; i++ ){
 		glm::vec4 position = glm::vec4 ( corners[i], 1.0 );
 		glm::vec4 transform = mat*position;
@@ -55,6 +54,7 @@ AABB AABB::transform ( const glm::mat4& mat ){
 		corners[i].y = transform.y / transform.w;
 		corners[i].z = transform.z / transform.w;
 	}
+	trans.reset ( );
 	trans.updateMinMax ( corners, 8 );
 	return trans;
 }
@@ -64,7 +64,7 @@ bool AABB::collide ( const AABB& aabb ) const{
 		( ( pmin.y >= aabb.pmin.y && pmin.y <= aabb.pmax.y ) || ( aabb.pmin.y >= pmin.y && aabb.pmin.y <= pmax.y ) ) &&
 		( ( pmin.z >= aabb.pmin.z && pmin.z <= aabb.pmax.z ) || ( aabb.pmin.z >= pmin.z && aabb.pmin.z <= pmax.z ) );
 }
-
+/*
 AABB AABB::translate ( const glm::vec3 move ){
 	return AABB ( this->pmin + move, this->pmax + move );
 }
@@ -73,3 +73,32 @@ void AABB::translater ( const glm::vec3 move ){
 	pmin += move;
 	pmax += move;
 }
+
+AABB AABB::rotateH ( float angle ){
+	glm::vec3 corners[8];
+	AABB trans ( this->pmin, this->pmax );
+	trans.getCorners ( corners );
+	int x, z;
+	for ( int i = 0; i < 8; i++ ){
+		x = corners[i].x;
+		z = corners[i].z;
+		corners[i].x = x*cos ( angle ) - z*sin ( angle );
+		corners[i].z = x*sin ( angle ) + z*cos ( angle );
+	}
+	trans.updateMinMax ( corners, 8 );
+	return trans;
+}
+
+void AABB::rotateHr ( float angle ){
+	glm::vec3 corners[8];
+	this->getCorners ( corners );
+	float x, z;
+	for ( int i = 0; i < 8; i++ ){
+		x = corners[i].x;
+		z = corners[i].z;
+		corners[i].x = x*cos ( angle ) - z*sin ( angle );
+		corners[i].z = x*sin ( angle ) + z*cos ( angle );
+	}
+	this->updateMinMax ( corners, 8 );
+}
+*/

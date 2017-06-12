@@ -2,7 +2,7 @@
 #define AABB_HPP
 #include <glm/glm.hpp>
 class AABB{
-private:
+public:
 	glm::vec3 pmin;
 	glm::vec3 pmax;
 public:
@@ -44,8 +44,10 @@ public:
 	void updateMinMax ( const glm::vec3 *point, int num );
 	AABB transform ( const glm::mat4& mat );
 	bool collide ( const AABB& aabb ) const;
-	AABB translate ( const glm::vec3 move );
-	void translater ( const glm::vec3 move );
+//	AABB translate ( const glm::vec3 move );
+//	void translater ( const glm::vec3 move );
+//	AABB rotateH ( float angle );
+//	void rotateHr ( float angle );
 };
 
 #endif

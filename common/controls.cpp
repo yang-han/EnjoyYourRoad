@@ -72,9 +72,9 @@ void setAABB ( std::vector<glm::vec3> & vertices, int type, glm::mat4 trans ){
 		topid++;
 	}
 }
-bool checkCollide ( glm::vec3 m ){
+bool checkCollide ( glm::mat4 m ){
 	for ( int i = 0; i < topid; i++ ){
-		if ( character.translate ( m ).collide ( object[i] ) ){
+		if ( character.transform ( m ).collide ( object[i] ) ){
 			// printf ( "collide!\n" );
 			return true;
 		}
@@ -146,12 +146,12 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 
     // Move forward
 	if (glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
-		if ( !checkCollide ( -motion_direction * deltaTime * speed ) )
+		if ( !checkCollide(glm::translate ( BikeTransformMatrix*glm::rotate ( glm::mat4(1.0f), motion_horizonal_angle, yAxis ), -motion_direction*deltaTime*speed )))
 			delta_position -= motion_direction * deltaTime * speed;
     }
 	// Move backward
 	if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
-		if ( !checkCollide ( motion_direction * deltaTime * speed ) )
+		if ( !checkCollide(glm::translate ( BikeTransformMatrix*glm::rotate ( glm::mat4(1.0f), motion_horizonal_angle, yAxis ), motion_direction*deltaTime*speed )))
 			delta_position += motion_direction * deltaTime * speed;
     }
 
@@ -163,24 +163,35 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 //
 //    bikeModelMatrix = glm::translate(bikeModelMatrix, motion_speed*(delta_ws_position*motion_direction));
 //
+    glm::mat4 checkMatrix = glm::mat4(1.0f);
 	// Strafe right
 	if (glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS){
 //		delta_position -= motion_right * deltaTime * speed;
 //		if(motion_horizonal_angle > -1.0f*PI)
-            motion_horizonal_angle -= 0.01f;
-		rotateMatrix = glm::rotate(rotateMatrix, PI/-7.0f, motion_direction);
-    }
+
+        checkMatrix = BikeTransformMatrix* glm::rotate(glm::rotate(glm::mat4(1.0f), motion_horizonal_angle-0.01f, yAxis), -PI/7.0f, motion_direction);
+        if (!checkCollide (checkMatrix))
+		{
+			motion_horizonal_angle -= 0.01f;
+			rotateMatrix = glm::rotate(rotateMatrix, PI/-7.0f, motion_direction);
+		}
+	}
 	// Strafe left
 	if (glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
 //		delta_position += motion_right * deltaTime * speed;
 //		if(motion_horizonal_angle < PI)
-            motion_horizonal_angle += 0.01f;
-		rotateMatrix = glm::rotate(rotateMatrix, PI/7.0f, motion_direction);
-    }
+        checkMatrix = BikeTransformMatrix* glm::rotate(glm::rotate(glm::mat4(1.0f), motion_horizonal_angle+0.01f, yAxis), PI/7.0f, motion_direction);
+        if(!checkCollide(checkMatrix))
+		{
+			motion_horizonal_angle += 0.01f;
+			rotateMatrix = glm::rotate(rotateMatrix, PI/7.0f, motion_direction);
+		}
+	}
+
 //	std::cout << motion_horizonal_angle << std::endl;
 	rotateMatrix = glm::rotate(rotateMatrix, motion_horizonal_angle, yAxis);
     BikeTransformMatrix = glm::translate(BikeTransformMatrix, delta_position);
-	character.translater(delta_position);
+//	character.translater(delta_position);
 //    std::cout << BikeModelMatrix <<std::endl;
     glm::vec3 BikePosition = glm::vec3(BikeTransformMatrix*glm::vec4(1,1,1,1));
     position = BikePosition + glm::vec3(-2.0f,3.0f,0.0f) + motion_direction * 8.0f;
