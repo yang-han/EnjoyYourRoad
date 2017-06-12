@@ -182,7 +182,8 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
     BikeTransformMatrix = glm::translate(BikeTransformMatrix, delta_position);
 	character.translater(delta_position);
 //    std::cout << BikeModelMatrix <<std::endl;
-    position = glm::vec3(BikeTransformMatrix*glm::vec4(1,1,1,1)) + glm::vec3(-2.0f,3.0f,0.0f) + motion_direction * 8.0f;
+    glm::vec3 BikePosition = glm::vec3(BikeTransformMatrix*glm::vec4(1,1,1,1));
+    position = BikePosition + glm::vec3(-2.0f,3.0f,0.0f) + motion_direction * 8.0f;
 
 //    std::cout << motion_direction.x << std::endl;
 //    std::cout << (delta_position*motion_direction).x << std::endl;
@@ -192,8 +193,10 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 
 	// Projection matrix : 45 Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 0.1f, 200.0f);
-    std::cout << position.x <<" " << position.y << " " << position.z << std::endl;
-	// Camera matrix
+//    std::cout << "view position: ("<< position.x <<", " << position.y << ", " << position.z  << ")"<< std::endl;
+    std::cout << "bike position: ("<< BikePosition.x <<", " << BikePosition.y << ", " << BikePosition.z  << ")"<< std::endl;
+
+    // Camera matrix
 	ViewMatrix       = glm::lookAt(
 			position,           // Camera is here
 			position+view_direction, // and looks here : at the same position, plus "direction"

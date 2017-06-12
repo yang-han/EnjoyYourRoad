@@ -39,9 +39,12 @@ render_skybox(skyboxVAO, cubemapTexture);
 #include "stb_image.h"
 #include <common/shader.hpp>
 
-GLuint loadCubemap(std::vector<std::string> faces);
-void render_skybox(GLuint VAO, GLuint VBO,GLuint cubemapTexture);
-void skybox_buffer(GLuint &skyboxVAO, GLuint &skyboxVBO);
+//GLuint loadCubemap(std::vector<std::string> faces);
+//void render_skybox(GLuint VAO, GLuint VBO,GLuint cubemapTexture);
+//void skybox_buffer(GLuint &skyboxVAO, GLuint &skyboxVBO);
 
+GLuint loadCubemap(std::vector<std::string> faces);
+void render_skybox(GLuint skyboxVAO, GLuint cubemapTexture);
+void skybox_buffer(GLuint &skyboxVAO, GLuint &skyboxVBO);
 
 #endif /* skybox_h */

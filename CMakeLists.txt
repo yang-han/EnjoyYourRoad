@@ -74,6 +74,8 @@ add_executable(main
     common/objloader.hpp
     common/vboindexer.cpp
     common/vboindexer.hpp
+	common/text2D.hpp
+	common/text2D.cpp
 
 	aabb.cpp
 	aabb.hpp

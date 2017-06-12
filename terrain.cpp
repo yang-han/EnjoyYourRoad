@@ -65,7 +65,7 @@ bool generateTerrain (
 		unsigned int uvIndex = uvIndices[i];
 		unsigned int normalIndex = normalIndices[i];
 		vertex = temp_vertices[vertexIndex];
-		uv = temp_uvs[uvIndex];
+		uv = temp_uvs[uvIndex] * 100.0f;
 		normal = temp_normals[normalIndex];
 		out_vertices.push_back ( vertex );
 		out_uvs.push_back ( uv );
