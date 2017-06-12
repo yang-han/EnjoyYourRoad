@@ -23,6 +23,8 @@ using namespace glm;
 
 #include <terrain.hpp>
 
+#include <skybox.h>
+
 void render_a_obj(GLuint vertexbuffer, GLuint uvbuffer, GLuint normalbuffer, GLuint elementbuffer, GLsizei indices_size){
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -116,8 +118,6 @@ void prepareObj(GLuint& VertexArrayID,
     glGenBuffers(1, &elementbuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
-
-
 }
 
 
@@ -177,7 +177,7 @@ int main( void )
     // Cull triangles which normal is not towards the camera
     //glEnable(GL_CULL_FACE); // Not this time !
 
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
 
 
 
@@ -260,6 +260,31 @@ int main( void )
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+
+    std::vector<std::string> faces
+            {
+                    "../skybox/right.tga",
+                    "../skybox/left.tga",
+                    "../skybox/top.tga",
+                    "../skybox/bottom.tga",
+                    "../skybox/back.tga",
+                    "../skybox/front.tga"
+            };
+
+
+    GLuint cubemapTexture = loadCubemap(faces);
+    GLuint skyShader = LoadShaders("../cubeShader.vs", "../cubeShader.fs");
+
+
+    GLint sky_ProjectionMatrixID = glGetUniformLocation(programID, "projection");
+    GLint sky_ViewMatrixID = glGetUniformLocation(programID, "view");
+
+
+
+    GLuint skyboxVAO, skyboxVBO;
+    skybox_buffer(skyboxVAO, skyboxVBO);
+
+
     glm::mat4 BikeScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f));
 
 
@@ -291,6 +316,7 @@ int main( void )
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
         // Use our shader
         glUseProgram(programID);
 
@@ -320,7 +346,7 @@ int main( void )
         glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
         // Bind our texture in Texture Unit 0
-        glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, Texture);
         // Set our "myTextureSampler" sampler to user Texture Unit 0
         glUniform1i(TextureID, 0);
@@ -338,6 +364,13 @@ int main( void )
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
+
+        glUseProgram(skyShader);
+
+        glm::mat4 view = glm::mat4(glm::mat3(ViewMatrix));
+        glUniformMatrix4fv(sky_ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
+        glUniformMatrix4fv(sky_ViewMatrixID, 1, GL_FALSE, &view[0][0]);
+        render_skybox(skyboxVAO, skyboxVBO, cubemapTexture);
 
 
         // Swap buffers

@@ -192,6 +192,7 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 
 	// Projection matrix : 45 Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 0.1f, 200.0f);
+    std::cout << position.x <<" " << position.y << " " << position.z << std::endl;
 	// Camera matrix
 	ViewMatrix       = glm::lookAt(
 			position,           // Camera is here

@@ -79,9 +79,11 @@ add_executable(main
 	aabb.hpp
     terrain.hpp
     terrain.cpp
+	stb_image.h
+    stb_image.cpp
+	skybox.cpp
+	skybox.h
 
-    VertexShader.vs
-	FragmentShader.fs
 
 )
 target_link_libraries(main
