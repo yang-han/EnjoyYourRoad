@@ -398,11 +398,10 @@ int main( void )
 
         // Bind our texture in Texture Unit 0
       
-		glm::vec3 lightPos = glm::vec3 ( 5, 200, 10 );
+		glm::vec3 lightPos = glm::vec3 ( 5, 200, 20 );
 		glUniform3f ( LightID, lightPos.x, lightPos.y, lightPos.z );
 
-		render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
-		/*
+			/*
 		glUseProgram ( bottomID );
 		glUniformMatrix4fv ( bottomMatrixID, 1, GL_FALSE, &MVP[0][0] );
 		glUniformMatrix4fv ( bottomModelMatrixID, 1, GL_FALSE, &SceneModelMatrix[0][0] );
@@ -413,8 +412,9 @@ int main( void )
 		glBindTexture ( GL_TEXTURE_2D, Texture );
 		// Set our "myTextureSampler" sampler to user Texture Unit 0
 		glUniform1i ( TextureID, 1 );
-	
-		//        render_a_obj(vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei)indices.size());
+        render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
+
+        //        render_a_obj(vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei)indices.size());
 		//        render_a_obj(test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
 		render_a_obj ( VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei) indices.size ( ) );
 
@@ -426,7 +426,7 @@ int main( void )
         for (int i = 0; i < num_of_objs; ++i) {
             glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &obs_MVP[0][0]);
             glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &obsModelMatrix[0][0]);
-            object[objs_AABB_ID[i]].transform(obsModelMatrix);
+            setAABB(objs_AABB_ID[i], obsModelMatrix);
             render_a_obj ( objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], (GLsizei) obj_indices[i].size ( ) );
         }
 

@@ -5,10 +5,11 @@
 #include <vector>
 #include "aabb.hpp"
 
-
 AABB character;
 std::vector<AABB> object;
+std::vector<glm::mat4> objectTransformMatrix;
 int topid = 0;
+
 int createAABB ( std::vector<glm::vec3> & vertices, int type ){
     glm::vec3 *v;
     v = new glm::vec3[vertices.size ( )];
@@ -21,8 +22,9 @@ int createAABB ( std::vector<glm::vec3> & vertices, int type ){
     }
     if ( type == OBJECT ){
         AABB obj;
+		obj.updateMinMax ( v, (int) vertices.size ( ) );
         object.push_back(obj);
-        object[topid].updateMinMax ( v, (int) vertices.size ( ) );
+		objectTransformMatrix.push_back ( glm::mat4 ( 1.0f ) );
         return topid++;
     }
 }
@@ -32,14 +34,14 @@ void setAABB ( int AABBID, glm::mat4 trans ){
         character = character.transform ( trans );
     }
     else if(AABBID<topid){
-        object[AABBID] = object[AABBID].transform(trans);
+		objectTransformMatrix[AABBID] = trans;
     }
 }
 
 bool checkCollide ( glm::mat4 m ){
     for ( int i = 0; i < topid; i++ ){
-        if ( character.transform ( m ).collide ( object[i] ) ){
-            // printf ( "collide!\n" );
+        if ( character.transform ( m ).collide ( object[i].transform( objectTransformMatrix[i] ) ) ){
+            printf ( "collide with obj %d!\n",i );
             return true;
         }
     }
@@ -67,7 +69,7 @@ glm::vec3 AABB::getBottomFront ( ){
 	glm::vec3 bottomFront;
 	bottomFront.x = 0.5f*( pmin.x + pmax.x );
 	bottomFront.y = 0.0f;
-	bottomFront.z = pmax.z;
+	bottomFront.z = pmin.z;
 	return bottomFront;
 }
 
@@ -75,7 +77,7 @@ glm::vec3 AABB::getBottomBack ( ){
 	glm::vec3 bottomBack;
 	bottomBack.x = 0.5f*( pmin.x + pmax.x );
 	bottomBack.y = 0.0f;
-	bottomBack.z = pmin.z;
+	bottomBack.z = pmax.z;
 	return bottomBack;
 }
 

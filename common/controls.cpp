@@ -121,33 +121,57 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 
     glm::vec3 delta_position = glm::vec3(0.0f);
 
+    //Get center's cordinates
+    glm::vec4 center = BikeTransformMatrix *glm::vec4 ( character.getBottomCenter ( ), 1.0 );
 
-    glm::vec4 center = glm::vec4 ( character.getBottomCenter ( ), 1.0 );
-    glm::vec4 centerT = BikeTransformMatrix *center;
-    glm::vec4 front = glm::vec4 ( character.getBottomFront ( ), 1.0 );
-    glm::vec4 frontT = BikeTransformMatrix*front;
-    glm::vec4 back = glm::vec4 ( character.getBottomBack ( ), 1.0 );
-    glm::vec4 backT = BikeTransformMatrix*back;
-    glm::vec4 bike = frontT - backT;
-    glm::vec3 axis = glm::vec3 ( 1.0f, 0.0f, -bike.x / bike.z );
-    float heightC = getHeight ( centerT.x / centerT.w, centerT.z / centerT.w );
-    float curHeightC = centerT.y / centerT.w;
-    float heightF = getHeight ( frontT.x / frontT.w, frontT.z / frontT.w );
-    float curHeightF = frontT.y / frontT.w;
-    float heightB = getHeight ( (float)backT.x/backT.w, (float)backT.z / backT.w );
-    float curHeightB = backT.y / backT.w;
+    //Get next position's height
+    float heightC = getHeight ( (float) center.x / center.w, (float) center.z / center.w );
+
+    //Get current position's height
+    float curHeightC = (float) center.y / center.w;
+
+    int droping = 0;
     float drop_height = 0.1f;
     glm::vec3 delta_height;
-    int on_land;
+    //Free drop
     if ( drop_height >= curHeightC - heightC ){
         delta_height = glm::vec3 ( 0, heightC - curHeightC, 0 );
-        on_land = 1;
         drop_height = 0.1f;
+        droping = 0;
     }
     else{
         delta_height = glm::vec3 ( 0, -drop_height, 0 );
-        on_land = 0;
         drop_height += 0.001f;
+        droping = 1;
+    }
+    if ( !droping ){
+        //Get the height difference of the front and the back of bike
+        glm::mat4 transformMatrix = BikeTransformMatrix*glm::rotate ( glm::mat4 ( 1.0f ), motion_horizonal_angle, yAxis );
+        glm::vec4 front = transformMatrix*glm::vec4 ( character.getBottomFront ( ), 1.0 );
+        glm::vec4 back = transformMatrix*glm::vec4 ( character.getBottomBack ( ), 1.0 );
+        float heightF = getHeight ( front.x / front.w, front.z / front.w );
+        float heightB = getHeight ( back.x / back.w, back.z / back.w );
+        float curHeightF = front.y / front.w;
+        float curHeightB = back.y / back.w;
+        if ( drop_height <= curHeightF - heightF ){
+            heightF = curHeightF - drop_height;
+        }
+        if ( drop_height <= curHeightB - heightB ){
+            heightB = curHeightB - drop_height;
+        }
+        float height_diff = heightF - heightB;
+        float curHeight_diff = curHeightF - curHeightB;
+
+        //Calculate rotation axis
+        glm::vec4 bike = front - back;
+        glm::vec3 axis = glm::cross ( glm::vec3 ( motion_direction ), glm::vec3 ( 0.0f, 1.0f, 0.0f ) );
+
+        //Calculate rotation angle
+        float bikeLength = abs ( character.pmin.z - character.pmax.z );
+        float rotate_angle = asin ( height_diff / bikeLength ) - asin ( curHeight_diff / bikeLength );
+
+        //Calculate rotate matrix
+        rotateMatrix = glm::rotate ( rotateMatrix, -rotate_angle, axis );
     }
     delta_position += delta_height;
 
