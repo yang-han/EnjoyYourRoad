@@ -7,12 +7,16 @@ extern GLFWwindow* window; // The "extern" keyword here is to access the variabl
 // Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <terrain.hpp>
+
 using namespace glm;
 
 #include "controls.hpp"
 #include "aabb.hpp"
 
 #define PI 3.1415926f
+
+extern AABB character;
 
 glm::mat4 ViewMatrix;
 glm::mat4 ProjectionMatrix;
@@ -37,7 +41,7 @@ float verticalAngle = 0.0f;
 // Initial Field of View
 float initialFoV = 45.0f;
 
-float speed = 5.0f; // 3 units / second
+float speed = 8.0f; // 3 units / second
 float mouseSpeed = 0.005f;
 
 float motion_horizonal_angle = 0;
@@ -52,34 +56,6 @@ glm::vec3 operator*(double m, glm::vec3& v){
 }
 glm::vec3 operator*(glm::vec3 v1, glm::vec3& v2){
 	return glm::vec3(v1.x*v2.x, v1.y*v2.y, v1.z*v2.z);
-}
-
-AABB character;
-AABB object[100];
-int topid = 0;
-void setAABB ( std::vector<glm::vec3> & vertices, int type, glm::mat4 trans ){
-	glm::vec3 *v;
-	v = new glm::vec3[vertices.size ( )];
-	for ( int i = 0; i < vertices.size ( ); i++ ){
-		v[i] = vertices[i];
-	}
-	//printf ( "size=%d\n", vertices.size ( ) );
-	if ( type == CHARACTER ){
-		character.updateMinMax (v, (int)vertices.size());
-	}
-	if ( type == OBJECT ){
-		object[topid].updateMinMax (v, (int)vertices.size() );
-		topid++;
-	}
-}
-bool checkCollide ( glm::mat4 m ){
-	for ( int i = 0; i < topid; i++ ){
-		if ( character.transform ( m ).collide ( object[i] ) ){
-			// printf ( "collide!\n" );
-			return true;
-		}
-	}
-	return false;
 }
 
 glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
@@ -108,6 +84,7 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 	// Compute new orientation
 	if(init_flag>=5){
         horizontalAngle += mouseSpeed * float(1024/2 - xpos );
+        verticalAngle += mouseSpeed * float( 768/2 - ypos );
     }
     // verticalAngle += mouseSpeed * float( 768/2 - ypos );
 
@@ -144,14 +121,44 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 
     glm::vec3 delta_position = glm::vec3(0.0f);
 
+
+    glm::vec4 center = glm::vec4 ( character.getBottomCenter ( ), 1.0 );
+    glm::vec4 centerT = BikeTransformMatrix *center;
+    glm::vec4 front = glm::vec4 ( character.getBottomFront ( ), 1.0 );
+    glm::vec4 frontT = BikeTransformMatrix*front;
+    glm::vec4 back = glm::vec4 ( character.getBottomBack ( ), 1.0 );
+    glm::vec4 backT = BikeTransformMatrix*back;
+    glm::vec4 bike = frontT - backT;
+    glm::vec3 axis = glm::vec3 ( 1.0f, 0.0f, -bike.x / bike.z );
+    float heightC = getHeight ( centerT.x / centerT.w, centerT.z / centerT.w );
+    float curHeightC = centerT.y / centerT.w;
+    float heightF = getHeight ( frontT.x / frontT.w, frontT.z / frontT.w );
+    float curHeightF = frontT.y / frontT.w;
+    float heightB = getHeight ( (float)backT.x/backT.w, (float)backT.z / backT.w );
+    float curHeightB = backT.y / backT.w;
+    float drop_height = 0.1f;
+    glm::vec3 delta_height;
+    int on_land;
+    if ( drop_height >= curHeightC - heightC ){
+        delta_height = glm::vec3 ( 0, heightC - curHeightC, 0 );
+        on_land = 1;
+        drop_height = 0.1f;
+    }
+    else{
+        delta_height = glm::vec3 ( 0, -drop_height, 0 );
+        on_land = 0;
+        drop_height += 0.001f;
+    }
+    delta_position += delta_height;
+
     // Move forward
 	if (glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
-		if ( !checkCollide(glm::translate ( BikeTransformMatrix*glm::rotate ( glm::mat4(1.0f), motion_horizonal_angle, yAxis ), -motion_direction*deltaTime*speed )))
+		if ( !checkCollide(glm::translate ( BikeTransformMatrix, -motion_direction*deltaTime*speed )*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis)))
 			delta_position -= motion_direction * deltaTime * speed;
     }
 	// Move backward
 	if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
-		if ( !checkCollide(glm::translate ( BikeTransformMatrix*glm::rotate ( glm::mat4(1.0f), motion_horizonal_angle, yAxis ), motion_direction*deltaTime*speed )))
+		if ( !checkCollide(glm::translate ( BikeTransformMatrix, motion_direction*deltaTime*speed )*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis)))
 			delta_position += motion_direction * deltaTime * speed;
     }
 
@@ -174,6 +181,8 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 		{
 			motion_horizonal_angle -= 0.01f;
 			rotateMatrix = glm::rotate(rotateMatrix, PI/-7.0f, motion_direction);
+            horizontalAngle = PI + motion_horizonal_angle;
+            verticalAngle = motion_vertical_angle;
 		}
 	}
 	// Strafe left
@@ -185,6 +194,8 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 		{
 			motion_horizonal_angle += 0.01f;
 			rotateMatrix = glm::rotate(rotateMatrix, PI/7.0f, motion_direction);
+            horizontalAngle = PI + motion_horizonal_angle;
+            verticalAngle = motion_vertical_angle;
 		}
 	}
 

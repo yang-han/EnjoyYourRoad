@@ -2,7 +2,50 @@
 #include <glm/glm.hpp>
 #include <stdio.h>
 #include <math.h>
+#include <vector>
 #include "aabb.hpp"
+
+
+AABB character;
+std::vector<AABB> object;
+int topid = 0;
+int createAABB ( std::vector<glm::vec3> & vertices, int type ){
+    glm::vec3 *v;
+    v = new glm::vec3[vertices.size ( )];
+    for ( int i = 0; i < vertices.size ( ); i++ ){
+        v[i] = vertices[i];
+    }
+    if ( type == CHARACTER ){
+        character.updateMinMax ( v, (int) vertices.size ( ) );
+        return -1;
+    }
+    if ( type == OBJECT ){
+        AABB obj;
+        object.push_back(obj);
+        object[topid].updateMinMax ( v, (int) vertices.size ( ) );
+        return topid++;
+    }
+}
+
+void setAABB ( int AABBID, glm::mat4 trans ){
+    if ( AABBID < 0 ){
+        character = character.transform ( trans );
+    }
+    else if(AABBID<topid){
+        object[AABBID] = object[AABBID].transform(trans);
+    }
+}
+
+bool checkCollide ( glm::mat4 m ){
+    for ( int i = 0; i < topid; i++ ){
+        if ( character.transform ( m ).collide ( object[i] ) ){
+            // printf ( "collide!\n" );
+            return true;
+        }
+    }
+    return false;
+}
+
 
 glm::vec3 AABB::getCenter ( ){
 	glm::vec3 center;
@@ -10,6 +53,30 @@ glm::vec3 AABB::getCenter ( ){
 	center.y = 0.5f*( pmin.y + pmax.y );
 	center.z = 0.5f*( pmin.z + pmax.z );
 	return center;
+}
+
+glm::vec3 AABB::getBottomCenter ( ){
+	glm::vec3 bottomCenter;
+	bottomCenter.x = 0.5f*( pmin.x + pmax.x );
+	bottomCenter.y = 0.0f;
+	bottomCenter.z = 0.5f*( pmin.z + pmax.z );
+	return bottomCenter;
+}
+
+glm::vec3 AABB::getBottomFront ( ){
+	glm::vec3 bottomFront;
+	bottomFront.x = 0.5f*( pmin.x + pmax.x );
+	bottomFront.y = 0.0f;
+	bottomFront.z = pmax.z;
+	return bottomFront;
+}
+
+glm::vec3 AABB::getBottomBack ( ){
+	glm::vec3 bottomBack;
+	bottomBack.x = 0.5f*( pmin.x + pmax.x );
+	bottomBack.y = 0.0f;
+	bottomBack.z = pmin.z;
+	return bottomBack;
 }
 
 void AABB::getCorners ( glm::vec3 *dst ) const{

@@ -23,60 +23,15 @@ using namespace glm;
 #include <common/text2D.hpp>
 
 #include <terrain.hpp>
+#include <aabb.hpp>
 
 #include <skybox.h>
 
+extern std::vector<AABB> object;
+extern AABB character;
 
-//
-//void render_a_obj(GLuint vertexbuffer, GLuint uvbuffer, GLuint normalbuffer, GLuint elementbuffer, GLsizei indices_size){
-//    glEnableVertexAttribArray(0);
-//    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-//    glVertexAttribPointer(
-//            0,                  // attribute
-//            3,                  // size
-//            GL_FLOAT,           // type
-//            GL_FALSE,           // normalized?
-//            0,                  // stride
-//            (void*)0            // array buffer offset
-//    );
-//
-//    // 2nd attribute buffer : UVs
-//    glEnableVertexAttribArray(1);
-//    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-//    glVertexAttribPointer(
-//            1,                                // attribute
-//            2,                                // size
-//            GL_FLOAT,                         // type
-//            GL_FALSE,                         // normalized?
-//            0,                                // stride
-//            (void*)0                          // array buffer offset
-//    );
-//
-//    // 3rd attribute buffer : normals
-//    glEnableVertexAttribArray(2);
-//    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-//    glVertexAttribPointer(
-//            2,                                // attribute
-//            3,                                // size
-//            GL_FLOAT,                         // type
-//            GL_FALSE,                         // normalized?
-//            0,                                // stride
-//            (void*)0                          // array buffer offset
-//    );
-//
-//    // Index buffer
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-//
-//    // Draw the triangles !
-//    glDrawElements(
-//            GL_TRIANGLES,      // mode
-//            (GLsizei)indices_size,    // count
-//            GL_UNSIGNED_SHORT, // type
-//            (void*)0           // element array buffer offset
-//    );
-//
-//}
-
+const int num_of_objs = 1;
+int objs_AABB_ID[num_of_objs];
 
 void render_a_obj(GLuint VAO, GLuint vertexbuffer, GLuint uvbuffer, GLuint normalbuffer, GLuint elementbuffer, GLsizei indices_size){
     glBindVertexArray(VAO);
@@ -173,6 +128,7 @@ void prepareObj(GLuint& VertexArrayID,
     glGenBuffers(1, &elementbuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
+	glBindVertexArray ( 0 );
 }
 
 
@@ -236,9 +192,15 @@ int main( void )
 
 
 
+//	GLuint bottomID = LoadShaders ( "bottom.vs", "bottom.fs" );
+//
+//	GLint bottomMatrixID = glGetUniformLocation ( bottomID, "MVP" );
+//	GLint bottomViewMatrixID = glGetUniformLocation ( bottomID, "V" );
+//	GLint bottomModelMatrixID = glGetUniformLocation ( bottomID, "M" );
+
 
     // Create and compile our GLSL program from the shaders
-    GLuint programID = LoadShaders( "../VertexShader.vs", "../FragmentShader.fs" );
+    GLuint programID = LoadShaders( "VertexShader.vs", "FragmentShader.fs" );
 
     // Get a handle for our "MVP" uniform
     GLint MatrixID = glGetUniformLocation(programID, "MVP");
@@ -246,8 +208,8 @@ int main( void )
     GLint ModelMatrixID = glGetUniformLocation(programID, "M");
 
     // Load the texture
-    GLuint Texture = loadDDS("../dsb.DDS");
-    GLuint BikeTexture = loadDDS("../norm.dds");
+    GLuint Texture = loadDDS("bottom.DDS");
+    GLuint BikeTexture = loadDDS("norm.dds");
 
     // Get a handle for our "myTextureSampler" uniform
     GLint TextureID = glGetUniformLocation(programID, "myTextureSampler");
@@ -280,10 +242,10 @@ int main( void )
     GLuint bike_uvbuffer;
     GLuint bike_normalbuffer;
     GLuint bike_elementbuffer;
-    prepareObj(BikeVertexArrayID, bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, "../bike.obj",
+    prepareObj(BikeVertexArrayID, bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, "bike.obj",
                bike_vertices, bike_uvs, bike_normals,
                bike_indices, indexed_bike_vertices, indexed_bike_uvs, indexed_bike_normals);
-    setAABB(bike_vertices,CHARACTER);
+    int bike_AABB_ID = createAABB(bike_vertices,CHARACTER);
 
     GLuint testVertexArrayID;
     std::vector<glm::vec3> test_vertices;
@@ -297,12 +259,33 @@ int main( void )
     GLuint test_uvbuffer;
     GLuint test_normalbuffer;
     GLuint test_elementbuffer;
-    prepareObj(testVertexArrayID, test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, "../testobject1.obj",
+    prepareObj(testVertexArrayID, test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, "testobject1.obj",
                test_vertices, test_uvs, test_normals,
                test_indices, indexed_test_vertices, indexed_test_uvs, indexed_test_normals);
-    setAABB(test_vertices,OBJECT);
+    int test_AABB_ID = createAABB(test_vertices,OBJECT);
 
+    GLuint objVertexArrayID[num_of_objs];
+    std::vector<glm::vec3> obj_vertices[num_of_objs];
+    std::vector<glm::vec2> obj_uvs[num_of_objs];
+    std::vector<glm::vec3> obj_normals[num_of_objs];
+    GLuint obj_vertexbuffer[num_of_objs];
+    GLuint obj_uvbuffer[num_of_objs];
+    GLuint obj_normalbuffer[num_of_objs];
+    GLuint obj_elementbuffer[num_of_objs];
+    std::vector<unsigned short> obj_indices[num_of_objs];
+    std::vector<glm::vec3> obj_indexed_vertices[num_of_objs];
+    std::vector<glm::vec2> obj_indexed_uvs[num_of_objs];
+    std::vector<glm::vec3> obj_indexed_normals[num_of_objs];
+    const char* obj_paths [num_of_objs] = {
+            "cuthead.obj",
+    };
 
+    for (int i = 0; i < num_of_objs; ++i) {
+        prepareObj(objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], obj_paths[i],
+                   obj_vertices[i], obj_uvs[i], obj_normals[i],
+                   obj_indices[i], obj_indexed_vertices[i], obj_indexed_uvs[i], obj_indexed_normals[i]);
+        objs_AABB_ID[i] = createAABB(obj_vertices[i],OBJECT);
+    }
 
     // Get a handle for our "LightPosition" uniform
     glUseProgram(programID);
@@ -319,23 +302,23 @@ int main( void )
 
     std::vector<std::string> faces
             {
-                    "../skybox/right.tga",
-                    "../skybox/left.tga",
-                    "../skybox/top.tga",
-                    "../skybox/bottom.tga",
-                    "../skybox/back.tga",
-                    "../skybox/front.tga"
+                    "skybox/right.tga",
+                    "skybox/left.tga",
+                    "skybox/top.tga",
+                    "skybox/bottom.tga",
+                    "skybox/back.tga",
+                    "skybox/front.tga"
             };
 
 
     GLuint cubemapTexture = loadCubemap(faces);
-    GLuint skyShader = LoadShaders("../cubeShader.vs", "../cubeShader.fs");
+    GLuint skyShader = LoadShaders("cubeShader.vs", "cubeShader.fs");
 
 
     GLint sky_ProjectionMatrixID = glGetUniformLocation(skyShader, "projection");
     GLint sky_ViewMatrixID = glGetUniformLocation(skyShader, "view");
 
-    GLint SkyTextureID = glGetUniformLocation(skyShader, "cubemap");
+ //   GLint SkyTextureID = glGetUniformLocation(skyShader, "cubemap");
 
 
 
@@ -343,10 +326,7 @@ int main( void )
     skybox_buffer(skyboxVAO, skyboxVBO);
 
 
-
-
-
-    initText2D("../Holstein.DDS");
+    initText2D("Holstein.DDS");
 
 //    glm::mat4 BikeScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f));
     glm::mat4 BikeScaleMatrix = glm::mat4(1.0f);
@@ -362,19 +342,29 @@ int main( void )
     glm::mat4 BikeTransformMatrix = glm::mat4(1.0f);
     glm::mat4 BikeModelMatrix = BikeTransformMatrix * BikeScaleMatrix;
     glm::mat4 BaseBikeModelMatrix = BikeModelMatrix;
-    glm::mat4 BikeMotionMatrix = glm::mat4(1.0f);
+    glm::mat4 BikeMotionMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0,0,20));
+
+    glm::vec3 yAxis = glm::vec3(0,1,0);
+    glm::mat4 obsRotateMatrix = glm::mat4(1.0f);
+    glm::mat4 obsTransformMatrix = glm::mat4(1.0f);
+    glm::mat4 obsModelMatrix = glm::mat4(1.0f);
 
     do{
 
         // Measure speed
         double currentTime = glfwGetTime();
-        nbFrames++;
+		nbFrames++;
+		char text[256];
+		static int fps = 0;
         if ( currentTime - lastTime >= 1.0 ){ // If last prinf() was more than 1sec ago
             // printf and reset
-            printf("%f ms/frame    FPS:%d\n", 1000.0/double(nbFrames), nbFrames);
+			printf ( "%f ms/frame    FPS:%d\n", 1000.0 / double ( nbFrames ), nbFrames );
+			fps = nbFrames;
+
             nbFrames = 0;
             lastTime += 1.0;
         }
+
 
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -399,25 +389,47 @@ int main( void )
 
         glm::mat4 bike_MVP = ProjectionMatrix * ViewMatrix * BikeModelMatrix;
 
+		
         // Send our transformation to the currently bound shader,
         // in the "MVP" uniform
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &SceneModelMatrix[0][0]);
         glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
-        glm::vec3 lightPos = glm::vec3(5, 20, 10);
-        glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
-
         // Bind our texture in Texture Unit 0
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, Texture);
-        // Set our "myTextureSampler" sampler to user Texture Unit 0
-        glUniform1i(TextureID, 0);
+      
+		glm::vec3 lightPos = glm::vec3 ( 5, 200, 10 );
+		glUniform3f ( LightID, lightPos.x, lightPos.y, lightPos.z );
 
-//        render_a_obj(vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei)indices.size());
-//        render_a_obj(test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
-        render_a_obj(VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei)indices.size());
-        render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
+		render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
+		/*
+		glUseProgram ( bottomID );
+		glUniformMatrix4fv ( bottomMatrixID, 1, GL_FALSE, &MVP[0][0] );
+		glUniformMatrix4fv ( bottomModelMatrixID, 1, GL_FALSE, &SceneModelMatrix[0][0] );
+		glUniformMatrix4fv ( bottomViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0] );
+
+		*/
+		glActiveTexture ( GL_TEXTURE1 );
+		glBindTexture ( GL_TEXTURE_2D, Texture );
+		// Set our "myTextureSampler" sampler to user Texture Unit 0
+		glUniform1i ( TextureID, 1 );
+	
+		//        render_a_obj(vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei)indices.size());
+		//        render_a_obj(test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
+		render_a_obj ( VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei) indices.size ( ) );
+
+        obsRotateMatrix = glm::rotate(obsRotateMatrix, 0.01f, yAxis);
+        obsTransformMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-10, 0, -5));
+        obsModelMatrix = obsTransformMatrix * obsRotateMatrix;
+
+        glm::mat4 obs_MVP = ProjectionMatrix * ViewMatrix * obsModelMatrix;
+        for (int i = 0; i < num_of_objs; ++i) {
+            glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &obs_MVP[0][0]);
+            glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &obsModelMatrix[0][0]);
+            object[objs_AABB_ID[i]].transform(obsModelMatrix);
+            render_a_obj ( objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], (GLsizei) obj_indices[i].size ( ) );
+        }
+
 
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &bike_MVP[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &BikeModelMatrix[0][0]);
@@ -439,13 +451,13 @@ int main( void )
         glUniformMatrix4fv(sky_ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
         glUniformMatrix4fv(sky_ViewMatrixID, 1, GL_FALSE, &view[0][0]);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+//        glActiveTexture(GL_TEXTURE0);
+//        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 
-        render_skybox(skyboxVBO, cubemapTexture);
+        render_skybox(skyboxVAO, cubemapTexture);
 
-        printText2D("fuck", 400, 400, 60);
-
+		sprintf ( text, "FPS:%d", fps );
+		printText2D ( text, 650, 550, 20 );
         // Swap buffers
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -10,5 +10,6 @@ bool generateTerrain (
 	std::vector<glm::vec3> & out_normals
 	);
 
+float getHeight ( float x, float z );
 
 #endif
