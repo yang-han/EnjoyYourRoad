@@ -398,7 +398,7 @@ int main( void )
 
         // Bind our texture in Texture Unit 0
       
-		glm::vec3 lightPos = glm::vec3 ( 5, 200, 20 );
+		glm::vec3 lightPos = glm::vec3 ( -60, 200, -95 );
 		glUniform3f ( LightID, lightPos.x, lightPos.y, lightPos.z );
 
 			/*

@@ -41,7 +41,7 @@ float verticalAngle = 0.0f;
 // Initial Field of View
 float initialFoV = 45.0f;
 
-float speed = 8.0f; // 3 units / second
+float speed = 0.0f; // 3 units / second
 float mouseSpeed = 0.005f;
 
 float motion_horizonal_angle = 0;
@@ -164,26 +164,46 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 
         //Calculate rotation axis
         glm::vec4 bike = front - back;
-        glm::vec3 axis = glm::cross ( glm::vec3 ( motion_direction ), glm::vec3 ( 0.0f, 1.0f, 0.0f ) );
+//        glm::vec3 axis = glm::cross ( glm::vec3 ( motion_direction ), glm::vec3 ( 0.0f, 1.0f, 0.0f ) );
 
         //Calculate rotation angle
         float bikeLength = abs ( character.pmin.z - character.pmax.z );
         float rotate_angle = asin ( height_diff / bikeLength ) - asin ( curHeight_diff / bikeLength );
 
         //Calculate rotate matrix
-        rotateMatrix = glm::rotate ( rotateMatrix, -rotate_angle, axis );
+        rotateMatrix = glm::rotate ( rotateMatrix, -rotate_angle, motion_right );
     }
     delta_position += delta_height;
 
     // Move forward
 	if (glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
 		if ( !checkCollide(glm::translate ( BikeTransformMatrix, -motion_direction*deltaTime*speed )*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis)))
-			delta_position -= motion_direction * deltaTime * speed;
+        {
+            if(speed <= 0.0f) speed += 0.5f;
+            else if(speed < 5.0f)speed += 0.1f;
+            else if(speed < 10.0f)speed += 0.05f;
+            delta_position -= motion_direction * deltaTime * speed;
+        }
     }
 	// Move backward
-	if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
-		if ( !checkCollide(glm::translate ( BikeTransformMatrix, motion_direction*deltaTime*speed )*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis)))
-			delta_position += motion_direction * deltaTime * speed;
+	else if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
+		if ( !checkCollide(glm::translate ( BikeTransformMatrix, -motion_direction*deltaTime*speed )*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis)))
+        {
+            if(speed > 3.0f)speed -= 0.1f;
+            else if(speed > 0.0f)speed -= 0.05f;
+            else if(speed > -5.0f)speed -= 0.05f;
+            delta_position -= motion_direction * deltaTime * speed;
+        }
+    }
+    else{
+        if ( !checkCollide(glm::translate ( BikeTransformMatrix, -motion_direction*deltaTime*speed )*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis)))
+        {
+
+            delta_position -= motion_direction * deltaTime * speed;
+            if(speed >= 0){speed -= 0.5f;if(speed<0.0f)speed = 0.0f;}
+            else {speed += 0.5f;if(speed > 0.0f)speed = 0.0f;}
+        }
+
     }
 
 //    motion_direction = glm::vec3(

@@ -8,7 +8,7 @@ map_argument = [
 ]
 
 map_pic = [
-    "dust.gif",
+    "default.gif",
     "dust.gif",
 ]
 
@@ -45,6 +45,7 @@ root.geometry("800x600+200+200")
 img = [PhotoImage(file=path) for path in map_pic]
 
 cv = Canvas(root, bg="white", width="800", height = 600)
+cv.create_image((400,400), image=img[0])
 cv.place(x=0,y=0)
 
 map_index = IntVar()
