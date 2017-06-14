@@ -20,7 +20,7 @@ int createAABB ( std::vector<glm::vec3> & vertices, int type ){
         character.updateMinMax ( v, (int) vertices.size ( ) );
         return -1;
     }
-    if ( type == OBJECT ){
+    else if ( type == OBJECT ){
         AABB obj;
 		obj.updateMinMax ( v, (int) vertices.size ( ) );
         object.push_back(obj);

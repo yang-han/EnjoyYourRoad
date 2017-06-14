@@ -264,6 +264,22 @@ int main( void )
                test_indices, indexed_test_vertices, indexed_test_uvs, indexed_test_normals);
     int test_AABB_ID = createAABB(test_vertices,OBJECT);
 
+    GLuint footVertexArrayID;
+    std::vector<glm::vec3> foot_vertices;
+    std::vector<glm::vec2> foot_uvs;
+    std::vector<glm::vec3> foot_normals;
+    std::vector<unsigned short> foot_indices;
+    std::vector<glm::vec3> indexed_foot_vertices;
+    std::vector<glm::vec2> indexed_foot_uvs;
+    std::vector<glm::vec3> indexed_foot_normals;
+    GLuint foot_vertexbuffer;
+    GLuint foot_uvbuffer;
+    GLuint foot_normalbuffer;
+    GLuint foot_elementbuffer;
+    prepareObj(footVertexArrayID, foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, "jtb.obj",
+               foot_vertices, foot_uvs, foot_normals,
+               foot_indices, indexed_foot_vertices, indexed_foot_uvs, indexed_foot_normals);
+
     GLuint objVertexArrayID[num_of_objs];
     std::vector<glm::vec3> obj_vertices[num_of_objs];
     std::vector<glm::vec2> obj_uvs[num_of_objs];
@@ -349,6 +365,7 @@ int main( void )
     glm::mat4 obsTransformMatrix = glm::mat4(1.0f);
     glm::mat4 obsModelMatrix = glm::mat4(1.0f);
 
+    glm::mat4 footModelMatrix = glm::mat4(1.0f);
     do{
 
         // Measure speed
@@ -376,7 +393,7 @@ int main( void )
 
 
         // Compute the MVP matrix from keyboard and mouse input
-        glm::mat4 bike_rotate_matrix = computeMatricesFromInputs(BikeMotionMatrix);
+        glm::mat4 bike_rotate_matrix = computeMatricesFromInputs(BikeMotionMatrix, footModelMatrix);
 
         BikeModelMatrix = BikeMotionMatrix * bike_rotate_matrix * BaseBikeModelMatrix;
 
@@ -430,6 +447,11 @@ int main( void )
             render_a_obj ( objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], (GLsizei) obj_indices[i].size ( ) );
         }
 
+        glm::mat4 foot_MVP = ProjectionMatrix * ViewMatrix * footModelMatrix;
+        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &foot_MVP[0][0]);
+        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &footModelMatrix[0][0]);
+        render_a_obj(footVertexArrayID,foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, (GLsizei)foot_indices.size());
+
 
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &bike_MVP[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &BikeModelMatrix[0][0]);
@@ -440,6 +462,7 @@ int main( void )
         glUniform1i(TextureID, 0);
 
         render_a_obj(BikeVertexArrayID,bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, (GLsizei)bike_indices.size());
+
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);

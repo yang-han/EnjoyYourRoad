@@ -44,6 +44,8 @@ float initialFoV = 45.0f;
 float speed = 0.0f; // 3 units / second
 float mouseSpeed = 0.005f;
 
+float foot_angle = 0.0f;
+
 float motion_horizonal_angle = 0;
 float motion_vertical_angle = 0.0f;
 
@@ -58,7 +60,11 @@ glm::vec3 operator*(glm::vec3 v1, glm::vec3& v2){
 	return glm::vec3(v1.x*v2.x, v1.y*v2.y, v1.z*v2.z);
 }
 
-glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
+glm::mat4 horizonalRotateMatrix = glm::mat4(1.0f);
+
+glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& footModelMatrix){
+    horizonalRotateMatrix = glm::mat4(1.0f);
+//    footModelMatrix = glm::mat4(1.0f);
 	glm::mat4 rotateMatrix = glm::mat4(1.0f);
     static int init_flag = 0;
     if(init_flag < 100)++init_flag;
@@ -131,7 +137,7 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
     float curHeightC = (float) center.y / center.w;
 
     int droping = 0;
-    float drop_height = 0.1f;
+    static float drop_height = 0.1f;
     glm::vec3 delta_height;
     //Free drop
     if ( drop_height >= curHeightC - heightC ){
@@ -177,23 +183,29 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 
     // Move forward
 	if (glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
+        if(speed <= 0.0f) speed += 0.5f;
+        else if(speed < 5.0f)speed += 0.1f;
+        else if(speed < 10.0f)speed += 0.05f;
 		if ( !checkCollide(glm::translate ( BikeTransformMatrix, -motion_direction*deltaTime*speed )*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis)))
         {
-            if(speed <= 0.0f) speed += 0.5f;
-            else if(speed < 5.0f)speed += 0.1f;
-            else if(speed < 10.0f)speed += 0.05f;
             delta_position -= motion_direction * deltaTime * speed;
+        }else{
+            speed = 0.0f;
         }
+
     }
 	// Move backward
 	else if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
+        if(speed > 3.0f)speed -= 0.1f;
+        else if(speed > 0.0f)speed -= 0.05f;
+        else if(speed > -5.0f)speed -= 0.05f;
 		if ( !checkCollide(glm::translate ( BikeTransformMatrix, -motion_direction*deltaTime*speed )*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis)))
         {
-            if(speed > 3.0f)speed -= 0.1f;
-            else if(speed > 0.0f)speed -= 0.05f;
-            else if(speed > -5.0f)speed -= 0.05f;
             delta_position -= motion_direction * deltaTime * speed;
+        }else{
+            speed = 0.0f;
         }
+
     }
     else{
         if ( !checkCollide(glm::translate ( BikeTransformMatrix, -motion_direction*deltaTime*speed )*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis)))
@@ -202,6 +214,8 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
             delta_position -= motion_direction * deltaTime * speed;
             if(speed >= 0){speed -= 0.5f;if(speed<0.0f)speed = 0.0f;}
             else {speed += 0.5f;if(speed > 0.0f)speed = 0.0f;}
+        }else{
+            speed = 0.0f;
         }
 
     }
@@ -224,7 +238,8 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
         if (!checkCollide (checkMatrix))
 		{
 			motion_horizonal_angle -= 0.01f;
-			rotateMatrix = glm::rotate(rotateMatrix, PI/-7.0f, motion_direction);
+			horizonalRotateMatrix = glm::rotate(glm::mat4(1.0f), PI/-7.0f, motion_direction);
+//            rotateMatrix = horizonalRotateMatrix * rotateMatrix;
             horizontalAngle = PI + motion_horizonal_angle;
             verticalAngle = motion_vertical_angle;
 		}
@@ -237,11 +252,13 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
         if(!checkCollide(checkMatrix))
 		{
 			motion_horizonal_angle += 0.01f;
-			rotateMatrix = glm::rotate(rotateMatrix, PI/7.0f, motion_direction);
+			horizonalRotateMatrix = glm::rotate(rotateMatrix, PI/7.0f, motion_direction);
             horizontalAngle = PI + motion_horizonal_angle;
             verticalAngle = motion_vertical_angle;
 		}
 	}
+    foot_angle +=  speed * 0.05f;
+
 
 //	std::cout << motion_horizonal_angle << std::endl;
 	rotateMatrix = glm::rotate(rotateMatrix, motion_horizonal_angle, yAxis);
@@ -254,8 +271,12 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix){
 //    std::cout << motion_direction.x << std::endl;
 //    std::cout << (delta_position*motion_direction).x << std::endl;
 
+    footModelMatrix = glm::rotate(glm::mat4(1.0f), foot_angle, glm::vec3(-1,0,0));
+    glm::mat4 footUpMatrix = glm::translate( glm::mat4(1.0f) ,glm::vec3(0,0.8,0));
+    footModelMatrix = BikeTransformMatrix * horizonalRotateMatrix * footUpMatrix * rotateMatrix * footModelMatrix;
+    rotateMatrix = horizonalRotateMatrix * rotateMatrix;
 
-	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.
+    float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.
 
 	// Projection matrix : 45 Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 0.1f, 200.0f);
