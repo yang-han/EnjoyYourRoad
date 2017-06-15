@@ -8,8 +8,8 @@ map_argument = [
 ]
 
 map_pic = [
-    "default.gif",
-    "dust.gif",
+    "resources/pictures/default.gif",
+    "resources/pictures/dust.gif",
 ]
 
 

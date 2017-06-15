@@ -234,7 +234,7 @@ int main( void )
 		"resources/texture/tree.DDS"
 	};
 	glm::mat4 obsTransformMatrix[num_of_objs] = {
-		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( -70.0f, 0.0f, -70.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( -40.0f, 0.0f, -40.0f ) ),
 		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 92.0f, 0.0f, 45.0f ) ),
 		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 20.0f, 0.0f, 97.0f ) ),
 		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 0.0f, 0.0f, -95.0f ) ),
@@ -482,7 +482,7 @@ int main( void )
     glm::mat4 BikeTransformMatrix = glm::mat4(1.0f);
     glm::mat4 BikeModelMatrix = BikeTransformMatrix * BikeScaleMatrix;
     glm::mat4 BaseBikeModelMatrix = BikeModelMatrix;
-    glm::mat4 BikeMotionMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0,0,20));
+    glm::mat4 BikeMotionMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(50,0,50));
 
     glm::vec3 yAxis = glm::vec3(0,1,0);
     glm::mat4 obsModelMatrix[num_of_objs];
@@ -510,7 +510,7 @@ int main( void )
 		nbFrames++;
 		char text[256];
 		static int fps = 0;
-        if ( currentTime - lastTime >= 1.0 ){ // If last prinf() was more than 1sec ago
+        if ( currentTime - lastTime >= 1.0 ){ // If last printf() was more than 1sec ago
             // printf and reset
 			printf ( "%f ms/frame    FPS:%d\n", 1000.0 / double ( nbFrames ), nbFrames );
 			fps = nbFrames;
@@ -524,7 +524,7 @@ int main( void )
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //--------------render depth of scene to the texture-------------
         // Compute the MVP matrix from the light's point of view
-        glm::vec3 lightPos = glm::vec3(-10.0f, 29.0f, -10.0f);
+        glm::vec3 lightPos = glm::vec3(0.0f, 29.0f, -15.0f);
         glm::mat4 lightSpaceMatrix = getlightSpaceMatrix(lightPos);
 
         glUseProgram(depthProgramID);
@@ -535,10 +535,13 @@ int main( void )
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
         // Compute the MVP matrix from keyboard and mouse input
-        glm::mat4 bike_rotate_matrix = computeMatricesFromInputs(BikeMotionMatrix,
-                                                                 footModelMatrix,
-                                                                 forwardWheelModelMatrix,
-                                                                 backWheelModelMatrix);
+        glm::mat4 bike_rotate_matrix = glm::mat4(1.0f);
+        glm::vec3 position = computeMatricesFromInputs(
+                        bike_rotate_matrix,
+                        BikeMotionMatrix,
+                        footModelMatrix,
+                        forwardWheelModelMatrix,
+                        backWheelModelMatrix);
         BikeModelMatrix = BikeMotionMatrix * bike_rotate_matrix * BaseBikeModelMatrix;
 
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
@@ -658,6 +661,8 @@ int main( void )
 
 		sprintf ( text, "FPS:%d", fps );
 		printText2D ( text, 650, 550, 20 );
+        sprintf(text, "Position:(%d, %d, %d)", (int)position.x, (int)position.y, (int)position.z);
+        printText2D( text, 0, 550, 15);
         // Swap buffers
         glfwSwapBuffers(window);
         glfwPollEvents();

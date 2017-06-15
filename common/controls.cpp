@@ -62,14 +62,13 @@ glm::vec3 operator*(glm::vec3 v1, glm::vec3& v2){
 
 glm::mat4 horizonalRotateMatrix = glm::mat4(1.0f);
 
-glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& footModelMatrix,
+glm::vec3 computeMatricesFromInputs(glm::mat4& rotateMatrix, glm::mat4& BikeTransformMatrix, glm::mat4& footModelMatrix,
                                     glm::mat4& forwardWheelModelMatrix, glm::mat4& backWheelModelMatrix){
     forwardWheelModelMatrix = glm::mat4(1.0f);
     backWheelModelMatrix = glm::mat4(1.0f);
     glm::mat4 WheelModelMatrix = glm::mat4(1.0f);
     horizonalRotateMatrix = glm::mat4(1.0f);
 //    footModelMatrix = glm::mat4(1.0f);
-	glm::mat4 rotateMatrix = glm::mat4(1.0f);
     static int init_flag = 0;
     if(init_flag < 100)++init_flag;
 	// glfwGetTime is called only once, the first time this function is called
@@ -181,6 +180,11 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& f
         float rotate_angle = asin ( height_diff / bikeLength ) - asin ( curHeight_diff / bikeLength );
 
         //Calculate rotate matrix
+//        if(height_diff >0){
+//            rotate_angle += 0.2f;
+//        }else{
+//            rotate_angle -= 0.1f;
+//        }
         rotateMatrix = glm::rotate ( rotateMatrix, -rotate_angle, motion_right );
     }
     delta_position += delta_height;
@@ -200,8 +204,8 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& f
     }
 	// Move backward
 	else if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
-        if(speed > 3.0f)speed -= 0.1f;
-        else if(speed > 0.0f)speed -= 0.05f;
+        if(speed > 3.0f)speed -= 0.2f;
+        else if(speed > 0.0f)speed -= 0.1f;
         else if(speed > -5.0f)speed -= 0.05f;
 		if ( !checkCollide(glm::translate ( BikeTransformMatrix, -motion_direction*deltaTime*speed )*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis)))
         {
@@ -244,7 +248,7 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& f
 //		delta_position -= motion_right * deltaTime * speed;
 //		if(motion_horizonal_angle > -1.0f*PI)
 
-        checkMatrix = BikeTransformMatrix * glm::rotate(glm::rotate(glm::mat4(1.0f), motion_horizonal_angle-0.01f, yAxis), -PI/7.0f, motion_direction);
+        checkMatrix = BikeTransformMatrix * glm::rotate(glm::mat4(1.0f), -PI/7.0f, motion_direction)*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle-0.01f, yAxis);
         if (!checkCollide (checkMatrix))
 		{
 			motion_horizonal_angle -= 0.01f;
@@ -258,7 +262,7 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& f
 	if (glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS || glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
 //		delta_position += motion_right * deltaTime * speed;
 //		if(motion_horizonal_angle < PI)
-        checkMatrix = BikeTransformMatrix* glm::rotate(glm::rotate(glm::mat4(1.0f), motion_horizonal_angle+0.01f, yAxis), PI/7.0f, motion_direction);
+        checkMatrix = BikeTransformMatrix* glm::rotate(glm::mat4(1.0f), PI/7.0f, motion_direction)*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle+0.01f, yAxis);
         if(!checkCollide(checkMatrix))
 		{
 			motion_horizonal_angle += 0.01f;
@@ -315,5 +319,5 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& f
 
 	// For the next frame, the "last time" will be "now"
 	lastTime = currentTime;
-	return rotateMatrix;
+	return BikePosition;
 }

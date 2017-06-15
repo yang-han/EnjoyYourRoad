@@ -9,7 +9,7 @@ int width;
 //Set terrain height here
 float height ( float x, float z ){
 	if ( x > 60 && x < 70 && z<5 && z>-5 ){
-		return 0.8f*( x - 60 );
+		return 1.2f*( x - 60 );
 	}
 	else if ( x >= 70 && x < 80 && z<5 && z>-5 ){
 		return 0.8f*( 80 - x );
