@@ -48,6 +48,19 @@ bool checkCollide ( glm::mat4 m ){
     return false;
 }
 
+bool rearrangeAABB ( int id, glm::vec3 min, glm::vec3 max ){
+	if ( id == -1 ){
+		character.set ( min, max );
+		return true;
+	}
+	else if ( id < topid ){
+		object[id].set ( min, max );
+		return true;
+	}
+	else{
+		return false;
+	}
+}
 
 glm::vec3 AABB::getCenter ( ){
 	glm::vec3 center;

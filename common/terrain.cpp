@@ -1,5 +1,6 @@
 #include <iostream>
 #include "terrain.hpp"
+#define PI 3.14159265
 
 std::vector<glm::vec3> terrain;
 int length;
@@ -7,12 +8,21 @@ int width;
 
 //Set terrain height here
 float height ( float x, float z ){
-	if ( x > 10 && x < 20&&z<5&&z>0 ){
-		return 0.8*( x-10 );
+	if ( x > 60 && x < 70 && z<5 && z>-5 ){
+		return 0.8f*( x - 60 );
 	}
-	else{
+	else if ( x >= 70 && x < 80 && z<5 && z>-5 ){
+		return 0.8f*( 80 - x );
+	}
+	if ( z<50 && z>-50 ){
+		if ( ( -0.004*z*z + 10.0 )*cos ( ( x ) / 10.0 / PI ) > 0.0 )
+			return (float)( -0.004f*z*z + 10.0 )*cos ( ( x ) / 10.0 / PI );
+		else{
+			return 0;
+		}
+	}
+	else
 		return 0;
-	}
 }
 
 bool generateTerrain (

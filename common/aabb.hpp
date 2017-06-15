@@ -63,6 +63,6 @@ public:
 int createAABB ( std::vector<glm::vec3> &, int );
 void setAABB ( int, glm::mat4 );
 bool checkCollide ( glm::mat4 m );
-
+bool rearrangeAABB ( int, glm::vec3, glm::vec3 );
 
 #endif

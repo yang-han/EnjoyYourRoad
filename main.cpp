@@ -31,7 +31,7 @@ using namespace glm;
 extern std::vector<AABB> object;
 extern AABB character;
 
-const int num_of_objs = 1;
+const int num_of_objs = 19;
 int objs_AABB_ID[num_of_objs];
 
 void render_a_obj(GLuint VAO, GLuint vertexbuffer, GLuint uvbuffer, GLuint normalbuffer, GLuint elementbuffer, GLsizei indices_size){
@@ -105,8 +105,8 @@ void prepareObj(GLuint& VertexArrayID,
 
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
-    if(path== nullptr){
-        generateTerrain(100,100,vertices,uvs,normals);
+    if(std::string(path) == std::string("terrain")){
+        generateTerrain(200,200,vertices,uvs,normals);
     }else{
         bool res = loadOBJ(path, vertices, uvs, normals);
     }
@@ -191,7 +191,90 @@ int main( void )
 
     //glEnable(GL_CULL_FACE);
 
-
+	const char* obj_paths[num_of_objs] = {
+		"resources/obj/cuthead.obj",
+		"resources/obj/rockstump.obj",
+		"resources/obj/river.obj",
+		"resources/obj/pond.obj",
+		"resources/obj/rockhill.obj",
+		"resources/obj/rockpiller.obj",
+		"resources/obj/rockpiller.obj",
+		"resources/obj/rockstump.obj",
+		"resources/obj/rockstump.obj",
+		"resources/obj/rock.obj", 
+		"resources/obj/rock.obj", 
+		"resources/obj/rockball.obj",
+		"resources/obj/mediumwall.obj",
+		"resources/obj/mediumwall.obj",
+		"resources/obj/longwall.obj",
+		"resources/obj/longwall.obj",
+		"resources/obj/shortwall.obj",
+		"resources/obj/shortwall.obj",
+		"resources/obj/baretree.obj"
+	};
+	const char* ObjTextureName[num_of_objs] = {
+		"resources/texture/bottom.DDS",
+        "resources/texture/rock5.DDS",
+		"resources/texture/water.DDS",
+		"resources/texture/waters.DDS",
+		"resources/texture/rock2.DDS",
+		"resources/texture/rock.DDS",
+		"resources/texture/rock.DDS",
+		"resources/texture/rock.DDS",
+		"resources/texture/rock5.DDS",
+		"resources/texture/rock.DDS",
+		"resources/texture/rock.DDS",
+		"resources/texture/rock.DDS",
+		"resources/texture/wall.DDS",
+		"resources/texture/wall.DDS",
+		"resources/texture/wall.DDS",
+		"resources/texture/wall.DDS",
+		"resources/texture/wall.DDS",
+		"resources/texture/wall.DDS",
+		"resources/texture/tree.DDS"
+	};
+	glm::mat4 obsTransformMatrix[num_of_objs] = {
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( -70.0f, 0.0f, -70.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 92.0f, 0.0f, 45.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 20.0f, 0.0f, 97.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 0.0f, 0.0f, -95.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( -90.0f, 0.0f, 60.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 18.5f, 0.0f, -95.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( -20.0f, 0.0f, -98.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 92.0f, 0.0f, 20.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 92.0f, 37.0f, 46.8f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 90.0f, -1.0f, 85.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 100.0f, -1.0f, 70.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 89.0f, 0.0f, 56.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 62.0f, -0.58f, -99.5f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( -62.0f, -0.58f, -99.5f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( -100.0f, -0.58f, -50.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 100.0f, -0.58f, -50.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( -100.0f, -0.58f, 8.0f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 100.0f, -0.58f, 0.5f ) ),
+		glm::translate ( glm::mat4 ( 1.0f ), glm::vec3 ( 50.0f, 0.0f, -50.0f ) )
+	};
+	glm::mat4 obsRotateMatrix[num_of_objs] = {
+		glm::mat4 ( 1.0f ),
+		glm::mat4 ( 1.0f ),
+		glm::mat4 ( 1.0f ),
+		glm::mat4 ( 1.0f ),
+		glm::rotate ( glm::mat4 ( 1.0f ), 1.57f, glm::vec3 ( 0.0f, 1.0f, 0.0f ) ),
+		glm::mat4 ( 1.0f ),
+		glm::mat4 ( 1.0f ),
+		glm::rotate ( glm::mat4 ( 1.0f ), 3.14f, glm::vec3 ( 0.0f, 1.0f, 0.0f ) ),
+		glm::rotate ( glm::mat4 ( 1.0f ), 1.72f, glm::vec3 ( -1.0f, 0.0f, 0.0f ) ),
+		glm::mat4 ( 1.0f ),
+		glm::rotate ( glm::mat4 ( 1.0f ), 3.14f, glm::vec3 ( 0.0f, 1.0f, 0.0f ) ),
+		glm::mat4 ( 1.0f ),
+		glm::mat4 ( 1.0f ),
+		glm::mat4 ( 1.0f ),
+		glm::rotate ( glm::mat4 ( 1.0f ), 1.57f, glm::vec3 ( 0.0f, 1.0f, 0.0f ) ),
+		glm::rotate ( glm::mat4 ( 1.0f ), 1.57f, glm::vec3 ( 0.0f, 1.0f, 0.0f ) ),
+		glm::rotate ( glm::mat4 ( 1.0f ), 1.57f, glm::vec3 ( 0.0f, 1.0f, 0.0f ) ),
+		glm::rotate ( glm::mat4 ( 1.0f ), 1.57f, glm::vec3 ( 0.0f, 1.0f, 0.0f ) ),
+		glm::mat4 ( 1.0f )
+	};
 
 //	GLuint bottomID = LoadShaders ( "bottom.vs", "bottom.fs" );
 //
@@ -208,10 +291,16 @@ int main( void )
     GLint ViewMatrixID = glGetUniformLocation(programID, "V");
     GLint ModelMatrixID = glGetUniformLocation(programID, "M");
 
+    std::cout << "fuck " << std::endl;
     // Load the texture
     GLuint Texture = loadDDS("resources/texture/bottom.DDS");
     GLuint BikeTexture = loadDDS("resources/texture/bike.DDS");
 //    GLuint WheelTexture = loadDDS("resources/texture/wheel.DDS");
+//    GLuint WheelTexture = loadDDS("resources/texture/wheel.DDS");
+	GLuint ObjTexture[num_of_objs];
+	for ( int i = 0; i < num_of_objs; i++ ){
+		ObjTexture[i] = loadDDS ( ObjTextureName[i] );
+	}
 
     // Get a handle for our "myTexturesampler" uniform
     GLint TextureID = glGetUniformLocation(programID, "myTextureSampler");
@@ -229,9 +318,13 @@ int main( void )
     std::vector<glm::vec3> indexed_vertices;
     std::vector<glm::vec2> indexed_uvs;
     std::vector<glm::vec3> indexed_normals;
-    prepareObj(VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, nullptr,
+
+    std::cout << "fuck " << std::endl;
+    prepareObj(VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, "terrain",
                vertices, uvs, normals,
                indices, indexed_vertices, indexed_uvs, indexed_normals);
+
+    std::cout << "fuck " << std::endl;
 
     GLuint wheelVertexArrayID;
     std::vector<glm::vec3> wheel_vertices;
@@ -267,7 +360,7 @@ int main( void )
     int bike_AABB_ID = createAABB(bike_vertices,CHARACTER);
 
 
-    GLuint testVertexArrayID;
+/*    GLuint testVertexArrayID;
     std::vector<glm::vec3> test_vertices;
     std::vector<glm::vec2> test_uvs;
     std::vector<glm::vec3> test_normals;
@@ -282,7 +375,7 @@ int main( void )
     prepareObj(testVertexArrayID, test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, "resources/obj/testobject1.obj",
                test_vertices, test_uvs, test_normals,
                test_indices, indexed_test_vertices, indexed_test_uvs, indexed_test_normals);
-    int test_AABB_ID = createAABB(test_vertices, OBJECT);
+    int test_AABB_ID = createAABB(test_vertices, OBJECT);*/
 
     GLuint footVertexArrayID;
     std::vector<glm::vec3> foot_vertices;
@@ -312,16 +405,31 @@ int main( void )
     std::vector<glm::vec3> obj_indexed_vertices[num_of_objs];
     std::vector<glm::vec2> obj_indexed_uvs[num_of_objs];
     std::vector<glm::vec3> obj_indexed_normals[num_of_objs];
-    const char* obj_paths [num_of_objs] = {
-            "resources/obj/cuthead.obj",
-    };
 
-    for (int i = 0; i < num_of_objs; ++i) {
-        prepareObj(objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], obj_paths[i],
-                   obj_vertices[i], obj_uvs[i], obj_normals[i],
-                   obj_indices[i], obj_indexed_vertices[i], obj_indexed_uvs[i], obj_indexed_normals[i]);
-        objs_AABB_ID[i] = createAABB(obj_vertices[i],OBJECT);
-    }
+	for ( int i = 0; i < num_of_objs; ++i ) {
+		prepareObj ( objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], obj_paths[i],
+			obj_vertices[i], obj_uvs[i], obj_normals[i],
+			obj_indices[i], obj_indexed_vertices[i], obj_indexed_uvs[i], obj_indexed_normals[i] );
+		objs_AABB_ID[i] = createAABB ( obj_vertices[i], OBJECT );
+//		std::cout << object[i].pmin.x << "," << object[i].pmin.y << "," << object[i].pmin.z << "  |  " <<
+//			object[i].pmax.x << "," << object[i].pmax.y << "," << object[i].pmax.z << std::endl;
+	}
+	//	For rock6 1
+	rearrangeAABB ( objs_AABB_ID[1], glm::vec3 ( -7.5f, -2.0f, -7.0f ), glm::vec3 ( 6.5f, 30.0f, 7.2f ) );
+	//	For river	
+	rearrangeAABB ( objs_AABB_ID[2], glm::vec3 ( -150.0f, -0.5f, -0.0f ), glm::vec3 ( 150.0f, 2.0f, 14.0f ) );
+	//	For pond	
+	rearrangeAABB ( objs_AABB_ID[3], glm::vec3 ( -14.0f, -2.0f, -12.0f ), glm::vec3 ( 14.0f, 2.0f, 8.0f ) );
+	//	For rock4	
+	rearrangeAABB ( objs_AABB_ID[4], glm::vec3 ( -30.0f, -2.0f, -10.0f ), glm::vec3 ( 29.0f, 30.0f, 14.0f ) );
+	//	For rock2 1	
+	rearrangeAABB ( objs_AABB_ID[5], glm::vec3 ( -3.5f, -2.0f, -5.5f ), glm::vec3 ( 4.5f, 10.0f, 4.0f ) );
+	//	For rock2 2
+	rearrangeAABB ( objs_AABB_ID[6], glm::vec3 ( -3.5f, -2.0f, -5.5f ), glm::vec3 ( 4.5f, 10.0f, 4.0f ) );
+	//	For rock stump
+	rearrangeAABB ( objs_AABB_ID[7], glm::vec3 ( -7.5f, -2.0f, -7.0f ), glm::vec3 ( 6.5f, 30.0f, 7.2f ) );
+	//	For bare tree
+	rearrangeAABB ( objs_AABB_ID[18], glm::vec3 ( -3.2f, -0.5f, -2.0f ), glm::vec3 ( 1.0f, 10.0f, 3.0f ) );
 
     // Get a handle for our "LightPosition" uniform
     glUseProgram(programID);
@@ -377,9 +485,7 @@ int main( void )
     glm::mat4 BikeMotionMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0,0,20));
 
     glm::vec3 yAxis = glm::vec3(0,1,0);
-    glm::mat4 obsRotateMatrix = glm::mat4(1.0f);
-    glm::mat4 obsTransformMatrix = glm::mat4(1.0f);
-    glm::mat4 obsModelMatrix = glm::mat4(1.0f);
+    glm::mat4 obsModelMatrix[num_of_objs];
 
     glm::mat4 forwardWheelModelMatrix = glm::mat4(1.0f);
     glm::mat4 backWheelModelMatrix = glm::mat4(1.0f);
@@ -441,7 +547,7 @@ int main( void )
         
         glUniformMatrix4fv(depthModelMatrixID, 1, GL_FALSE, &SceneModelMatrix[0][0]);
         render_a_obj ( VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei) indices.size ( ) );
-        render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
+//        render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
 
         glUniformMatrix4fv(depthModelMatrixID, 1, GL_FALSE, &forwardWheelModelMatrix[0][0]);
         render_a_obj(wheelVertexArrayID,wheel_vertexbuffer, wheel_uvbuffer, wheel_normalbuffer, wheel_elementbuffer, (GLsizei)wheel_indices.size());
@@ -450,13 +556,12 @@ int main( void )
 
 
 
-        obsRotateMatrix = glm::rotate(obsRotateMatrix, 0.01f, yAxis);
-        obsTransformMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-10, 0, -5));
-        obsModelMatrix = obsTransformMatrix * obsRotateMatrix;
-        for (int i = 0; i < num_of_objs; ++i) {
+        obsRotateMatrix[0] = glm::rotate(obsRotateMatrix[0], 0.01f, yAxis);
+		for ( int i = 0; i < num_of_objs; ++i ) {
+			obsModelMatrix[i] = obsTransformMatrix[i] * obsRotateMatrix[i];
             // glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
-            glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "model"), 1, GL_FALSE, &obsModelMatrix[0][0]);
-            setAABB(objs_AABB_ID[i], obsModelMatrix);
+            glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "model"), 1, GL_FALSE, &obsModelMatrix[i][0][0]);
+            setAABB(objs_AABB_ID[i], obsModelMatrix[i]);
             render_a_obj ( objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], (GLsizei) obj_indices[i].size ( ) );
         }
 
@@ -513,14 +618,17 @@ int main( void )
 
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &SceneModelMatrix[0][0]);
 
-        render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
+//        render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
 		render_a_obj ( VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei) indices.size ( ) );
 
         // glm::mat4 obs_MVP = ProjectionMatrix * ViewMatrix * obsModelMatrix;
         for (int i = 0; i < num_of_objs; ++i) {
+			glActiveTexture ( GL_TEXTURE1 );
+			glBindTexture ( GL_TEXTURE_2D, ObjTexture[i] );
+			glUniform1i ( TextureID, 1 );
 //            glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
-            glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &obsModelMatrix[0][0]);
-            setAABB(objs_AABB_ID[i], obsModelMatrix);
+            glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &obsModelMatrix[i][0][0]);
+            setAABB(objs_AABB_ID[i], obsModelMatrix[i]);
             render_a_obj ( objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], (GLsizei) obj_indices[i].size ( ) );
         }
 

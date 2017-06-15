@@ -77,7 +77,7 @@ python3 run.py # or ./main
 
 ## 3. Things I'd like to mention
 
-In order to hand in the homework, I (with two partners) try hard to learn openGL in the core profile using variaties of shader. Within one week's spare time, we finally completed this, exhaustedly.
+In order to hand in the homework, I (with two partners) try hard to learn openGL using variaties of shaders. Within one week's spare time, we finally completed this, exhaustedly.
 
 All the models(*.obj) are created by hand, with no professional model constructor, and we nearly used no libraries, though some codes are learned from some tutorials on the web.
 
