@@ -77,16 +77,16 @@ add_executable(main
 	common/text2D.hpp
 	common/text2D.cpp
 
-	aabb.cpp
-	aabb.hpp
-    terrain.hpp
-    terrain.cpp
-	stb_image.h
-    stb_image.cpp
-	skybox.cpp
-	skybox.h
-	shadow.cpp
-	shadow.h
+	common/aabb.cpp
+	common/aabb.hpp
+    common/terrain.hpp
+    common/terrain.cpp
+	common/stb_image.h
+    common/stb_image.cpp
+	common/skybox.cpp
+	common/skybox.h
+	common/shadow.cpp
+	common/shadow.h
 
 
 )

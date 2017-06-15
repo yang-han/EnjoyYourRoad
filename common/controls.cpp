@@ -7,7 +7,7 @@ extern GLFWwindow* window; // The "extern" keyword here is to access the variabl
 // Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <terrain.hpp>
+#include "terrain.hpp"
 
 using namespace glm;
 

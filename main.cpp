@@ -22,11 +22,11 @@ using namespace glm;
 #include <common/vboindexer.hpp>
 #include <common/text2D.hpp>
 
-#include <terrain.hpp>
-#include <aabb.hpp>
+#include <common/terrain.hpp>
+#include <common/aabb.hpp>
 
-#include <skybox.h>
-#include <shadow.h>
+#include <common/skybox.h>
+#include <common/shadow.h>
 
 extern std::vector<AABB> object;
 extern AABB character;
@@ -201,7 +201,7 @@ int main( void )
 
 
     // Create and compile our GLSL program from the shaders
-    GLuint programID = LoadShaders( "VertexShader.vs", "FragmentShader.fs" );
+    GLuint programID = LoadShaders( "shaders/VertexShader.vs", "shaders/FragmentShader.fs" );
 
     // Get a handle for our "MVP" uniform
     GLint ProjectionMatrixID = glGetUniformLocation(programID, "P");
@@ -209,10 +209,10 @@ int main( void )
     GLint ModelMatrixID = glGetUniformLocation(programID, "M");
 
     // Load the texture
-    GLuint Texture = loadDDS("bottom.DDS");
-    GLuint BikeTexture = loadDDS("norm.dds");
+    GLuint Texture = loadDDS("resources/texture/bottom.DDS");
+    GLuint BikeTexture = loadDDS("resources/texture/norm.dds");
 
-    // Get a handle for our "myTextureSampler" uniform
+    // Get a handle for our "myTexturesampler" uniform
     GLint TextureID = glGetUniformLocation(programID, "myTextureSampler");
 
 
@@ -243,7 +243,7 @@ int main( void )
     GLuint bike_uvbuffer;
     GLuint bike_normalbuffer;
     GLuint bike_elementbuffer;
-    prepareObj(BikeVertexArrayID, bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, "bike.obj",
+    prepareObj(BikeVertexArrayID, bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, "resources/obj/bike.obj",
                bike_vertices, bike_uvs, bike_normals,
                bike_indices, indexed_bike_vertices, indexed_bike_uvs, indexed_bike_normals);
     int bike_AABB_ID = createAABB(bike_vertices,CHARACTER);
@@ -260,7 +260,7 @@ int main( void )
     GLuint test_uvbuffer;
     GLuint test_normalbuffer;
     GLuint test_elementbuffer;
-    prepareObj(testVertexArrayID, test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, "testobject1.obj",
+    prepareObj(testVertexArrayID, test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, "resources/obj/testobject1.obj",
                test_vertices, test_uvs, test_normals,
                test_indices, indexed_test_vertices, indexed_test_uvs, indexed_test_normals);
     int test_AABB_ID = createAABB(test_vertices,OBJECT);
@@ -277,7 +277,7 @@ int main( void )
     GLuint foot_uvbuffer;
     GLuint foot_normalbuffer;
     GLuint foot_elementbuffer;
-    prepareObj(footVertexArrayID, foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, "jtb.obj",
+    prepareObj(footVertexArrayID, foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, "resources/obj/jtb.obj",
                foot_vertices, foot_uvs, foot_normals,
                foot_indices, indexed_foot_vertices, indexed_foot_uvs, indexed_foot_normals);
 
@@ -294,7 +294,7 @@ int main( void )
     std::vector<glm::vec2> obj_indexed_uvs[num_of_objs];
     std::vector<glm::vec3> obj_indexed_normals[num_of_objs];
     const char* obj_paths [num_of_objs] = {
-            "cuthead.obj",
+            "resources/obj/cuthead.obj",
     };
 
     for (int i = 0; i < num_of_objs; ++i) {
@@ -329,7 +329,7 @@ int main( void )
 
 
     GLuint cubemapTexture = loadCubemap(faces);
-    GLuint skyShader = LoadShaders("cubeShader.vs", "cubeShader.fs");
+    GLuint skyShader = LoadShaders("shaders/cubeShader.vs", "shaders/cubeShader.fs");
 
 
     GLint sky_ProjectionMatrixID = glGetUniformLocation(skyShader, "projection");
@@ -339,7 +339,7 @@ int main( void )
     skybox_buffer(skyboxVAO, skyboxVBO);
 
 
-    initText2D("Holstein.DDS");
+    initText2D("resources/texture/Holstein.DDS");
 
 //    glm::mat4 BikeScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f));
     glm::mat4 BikeScaleMatrix = glm::mat4(1.0f);
@@ -364,7 +364,7 @@ int main( void )
 
     glm::mat4 footModelMatrix = glm::mat4(1.0f);
 
-    GLuint depthProgramID = LoadShaders( "depth.vs", "depth.fs" );
+    GLuint depthProgramID = LoadShaders( "shaders/depth.vs", "shaders/depth.fs" );
     //------------------------shadow-------------------------------
     int windowWidth;
     int windowHeight;
@@ -402,7 +402,7 @@ int main( void )
         glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "lightSpaceMatrix"), 1, GL_FALSE, &lightSpaceMatrix[0][0]);
     
         // Clear the screen
-        glViewport(0, 0, 2048, 2048);
+        glViewport(0, 0, 3072, 3072);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
         // Compute the MVP matrix from keyboard and mouse input
@@ -473,7 +473,7 @@ int main( void )
 
         // glm::mat4 obs_MVP = ProjectionMatrix * ViewMatrix * obsModelMatrix;
         for (int i = 0; i < num_of_objs; ++i) {
-            glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
+//            glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
             glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &obsModelMatrix[0][0]);
             setAABB(objs_AABB_ID[i], obsModelMatrix);
             render_a_obj ( objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], (GLsizei) obj_indices[i].size ( ) );
