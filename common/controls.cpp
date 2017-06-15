@@ -62,7 +62,11 @@ glm::vec3 operator*(glm::vec3 v1, glm::vec3& v2){
 
 glm::mat4 horizonalRotateMatrix = glm::mat4(1.0f);
 
-glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& footModelMatrix){
+glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& footModelMatrix,
+                                    glm::mat4& forwardWheelModelMatrix, glm::mat4& backWheelModelMatrix){
+    forwardWheelModelMatrix = glm::mat4(1.0f);
+    backWheelModelMatrix = glm::mat4(1.0f);
+    glm::mat4 WheelModelMatrix = glm::mat4(1.0f);
     horizonalRotateMatrix = glm::mat4(1.0f);
 //    footModelMatrix = glm::mat4(1.0f);
 	glm::mat4 rotateMatrix = glm::mat4(1.0f);
@@ -240,7 +244,7 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& f
 //		delta_position -= motion_right * deltaTime * speed;
 //		if(motion_horizonal_angle > -1.0f*PI)
 
-        checkMatrix = BikeTransformMatrix* glm::rotate(glm::rotate(glm::mat4(1.0f), motion_horizonal_angle-0.01f, yAxis), -PI/7.0f, motion_direction);
+        checkMatrix = BikeTransformMatrix * glm::rotate(glm::rotate(glm::mat4(1.0f), motion_horizonal_angle-0.01f, yAxis), -PI/7.0f, motion_direction);
         if (!checkCollide (checkMatrix))
 		{
 			motion_horizonal_angle -= 0.01f;
@@ -277,9 +281,22 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& f
 //    std::cout << motion_direction.x << std::endl;
 //    std::cout << (delta_position*motion_direction).x << std::endl;
 
+
     footModelMatrix = glm::rotate(glm::mat4(1.0f), foot_angle, glm::vec3(-1,0,0));
+
+    WheelModelMatrix = glm::rotate(glm::mat4(1.0f), foot_angle * 0.5f, glm::vec3(-1,0,0));
     glm::mat4 footUpMatrix = glm::translate( glm::mat4(1.0f) ,glm::vec3(0,0.8,0));
+    glm::mat4 wheelUpMatrix = glm::translate( glm::mat4(1.0f) ,glm::vec3(0,0.9,0));
     footModelMatrix = BikeTransformMatrix * horizonalRotateMatrix * footUpMatrix * rotateMatrix * footModelMatrix;
+
+    glm::mat4 wheelForwardMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.9f, 1.55f));
+    glm::mat4 wheelBackMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.9f, -1.5f));
+
+    forwardWheelModelMatrix = BikeTransformMatrix * horizonalRotateMatrix * rotateMatrix * wheelForwardMatrix * WheelModelMatrix;
+    backWheelModelMatrix = BikeTransformMatrix * horizonalRotateMatrix * rotateMatrix * wheelBackMatrix * WheelModelMatrix;
+
+
+
     rotateMatrix = horizonalRotateMatrix * rotateMatrix;
 
     float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.

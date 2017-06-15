@@ -210,7 +210,8 @@ int main( void )
 
     // Load the texture
     GLuint Texture = loadDDS("resources/texture/bottom.DDS");
-    GLuint BikeTexture = loadDDS("resources/texture/norm.dds");
+    GLuint BikeTexture = loadDDS("resources/texture/bike.DDS");
+//    GLuint WheelTexture = loadDDS("resources/texture/wheel.DDS");
 
     // Get a handle for our "myTexturesampler" uniform
     GLint TextureID = glGetUniformLocation(programID, "myTextureSampler");
@@ -219,7 +220,8 @@ int main( void )
     GLuint VertexArrayID;
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
-    std::vector<glm::vec3> normals;GLuint vertexbuffer;
+    std::vector<glm::vec3> normals;
+    GLuint vertexbuffer;
     GLuint uvbuffer;
     GLuint normalbuffer;
     GLuint elementbuffer;
@@ -230,6 +232,22 @@ int main( void )
     prepareObj(VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, nullptr,
                vertices, uvs, normals,
                indices, indexed_vertices, indexed_uvs, indexed_normals);
+
+    GLuint wheelVertexArrayID;
+    std::vector<glm::vec3> wheel_vertices;
+    std::vector<glm::vec2> wheel_uvs;
+    std::vector<glm::vec3> wheel_normals;
+    std::vector<unsigned short> wheel_indices;
+    std::vector<glm::vec3> indexed_wheel_vertices;
+    std::vector<glm::vec2> indexed_wheel_uvs;
+    std::vector<glm::vec3> indexed_wheel_normals;
+    GLuint wheel_vertexbuffer;
+    GLuint wheel_uvbuffer;
+    GLuint wheel_normalbuffer;
+    GLuint wheel_elementbuffer;
+    prepareObj(wheelVertexArrayID, wheel_vertexbuffer, wheel_uvbuffer, wheel_normalbuffer, wheel_elementbuffer, "resources/obj/wheel.obj",
+               wheel_vertices, wheel_uvs, wheel_normals,
+               wheel_indices, indexed_wheel_vertices, indexed_wheel_uvs, indexed_wheel_normals);
 
     GLuint BikeVertexArrayID;
     std::vector<glm::vec3> bike_vertices;
@@ -243,10 +261,11 @@ int main( void )
     GLuint bike_uvbuffer;
     GLuint bike_normalbuffer;
     GLuint bike_elementbuffer;
-    prepareObj(BikeVertexArrayID, bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, "resources/obj/bike.obj",
+    prepareObj(BikeVertexArrayID, bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, "resources/obj/newbike.obj",
                bike_vertices, bike_uvs, bike_normals,
                bike_indices, indexed_bike_vertices, indexed_bike_uvs, indexed_bike_normals);
     int bike_AABB_ID = createAABB(bike_vertices,CHARACTER);
+
 
     GLuint testVertexArrayID;
     std::vector<glm::vec3> test_vertices;
@@ -263,7 +282,7 @@ int main( void )
     prepareObj(testVertexArrayID, test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, "resources/obj/testobject1.obj",
                test_vertices, test_uvs, test_normals,
                test_indices, indexed_test_vertices, indexed_test_uvs, indexed_test_normals);
-    int test_AABB_ID = createAABB(test_vertices,OBJECT);
+    int test_AABB_ID = createAABB(test_vertices, OBJECT);
 
     GLuint footVertexArrayID;
     std::vector<glm::vec3> foot_vertices;
@@ -277,7 +296,7 @@ int main( void )
     GLuint foot_uvbuffer;
     GLuint foot_normalbuffer;
     GLuint foot_elementbuffer;
-    prepareObj(footVertexArrayID, foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, "resources/obj/jtb.obj",
+    prepareObj(footVertexArrayID, foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, "resources/obj/foot.obj",
                foot_vertices, foot_uvs, foot_normals,
                foot_indices, indexed_foot_vertices, indexed_foot_uvs, indexed_foot_normals);
 
@@ -362,6 +381,9 @@ int main( void )
     glm::mat4 obsTransformMatrix = glm::mat4(1.0f);
     glm::mat4 obsModelMatrix = glm::mat4(1.0f);
 
+    glm::mat4 forwardWheelModelMatrix = glm::mat4(1.0f);
+    glm::mat4 backWheelModelMatrix = glm::mat4(1.0f);
+
     glm::mat4 footModelMatrix = glm::mat4(1.0f);
 
     GLuint depthProgramID = LoadShaders( "shaders/depth.vs", "shaders/depth.fs" );
@@ -373,6 +395,7 @@ int main( void )
     GLuint depthMap;
     shadowFBO(depthMapFBO, depthMap);
     GLint ShadowMapID = glGetUniformLocation(programID, "shadowMap");
+    GLint depthModelMatrixID = glGetUniformLocation(depthProgramID, "model");
 
     do{
 
@@ -406,16 +429,26 @@ int main( void )
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
         // Compute the MVP matrix from keyboard and mouse input
-        glm::mat4 bike_rotate_matrix = computeMatricesFromInputs(BikeMotionMatrix, footModelMatrix);
+        glm::mat4 bike_rotate_matrix = computeMatricesFromInputs(BikeMotionMatrix,
+                                                                 footModelMatrix,
+                                                                 forwardWheelModelMatrix,
+                                                                 backWheelModelMatrix);
         BikeModelMatrix = BikeMotionMatrix * bike_rotate_matrix * BaseBikeModelMatrix;
 
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();
         glm::mat4 SceneModelMatrix = SceneTransformMatrix;
         
-        glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "model"), 1, GL_FALSE, &SceneModelMatrix[0][0]);
+        glUniformMatrix4fv(depthModelMatrixID, 1, GL_FALSE, &SceneModelMatrix[0][0]);
+        render_a_obj ( VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei) indices.size ( ) );
         render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
-		render_a_obj ( VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei) indices.size ( ) );
+
+        glUniformMatrix4fv(depthModelMatrixID, 1, GL_FALSE, &forwardWheelModelMatrix[0][0]);
+        render_a_obj(wheelVertexArrayID,wheel_vertexbuffer, wheel_uvbuffer, wheel_normalbuffer, wheel_elementbuffer, (GLsizei)wheel_indices.size());
+        glUniformMatrix4fv(depthModelMatrixID, 1, GL_FALSE, &backWheelModelMatrix[0][0]);
+        render_a_obj(wheelVertexArrayID,wheel_vertexbuffer, wheel_uvbuffer, wheel_normalbuffer, wheel_elementbuffer, (GLsizei)wheel_indices.size());
+
+
 
         obsRotateMatrix = glm::rotate(obsRotateMatrix, 0.01f, yAxis);
         obsTransformMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-10, 0, -5));
@@ -427,10 +460,10 @@ int main( void )
             render_a_obj ( objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], (GLsizei) obj_indices[i].size ( ) );
         }
 
-        glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "model"), 1, GL_FALSE, &footModelMatrix[0][0]);
-        render_a_obj(footVertexArrayID,foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, (GLsizei)foot_indices.size());
         glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "model"), 1, GL_FALSE, &BikeModelMatrix[0][0]);
         render_a_obj(BikeVertexArrayID,bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, (GLsizei)bike_indices.size());
+        glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "model"), 1, GL_FALSE, &footModelMatrix[0][0]);
+        render_a_obj(footVertexArrayID,foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, (GLsizei)foot_indices.size());
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         //-------------------render as usual-------------------------------------
@@ -461,12 +494,24 @@ int main( void )
 		glUniformMatrix4fv ( bottomViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0] );
 
 		*/
-		glActiveTexture ( GL_TEXTURE0 );
+
+        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &forwardWheelModelMatrix[0][0]);
+        render_a_obj(wheelVertexArrayID,wheel_vertexbuffer, wheel_uvbuffer, wheel_normalbuffer, wheel_elementbuffer, (GLsizei)wheel_indices.size());
+        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &backWheelModelMatrix[0][0]);
+        render_a_obj(wheelVertexArrayID,wheel_vertexbuffer, wheel_uvbuffer, wheel_normalbuffer, wheel_elementbuffer, (GLsizei)wheel_indices.size());
+
+        glActiveTexture ( GL_TEXTURE0 );
 		glBindTexture ( GL_TEXTURE_2D, Texture );
 		glUniform1i ( TextureID, 0 );
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, depthMap);
         glUniform1i(ShadowMapID, 1);
+
+        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &footModelMatrix[0][0]);
+        render_a_obj(footVertexArrayID,foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, (GLsizei)foot_indices.size());
+
+
+        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &SceneModelMatrix[0][0]);
 
         render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
 		render_a_obj ( VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei) indices.size ( ) );
@@ -480,13 +525,11 @@ int main( void )
         }
 
         // glm::mat4 foot_MVP = ProjectionMatrix * ViewMatrix * footModelMatrix;
-        glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
-        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &footModelMatrix[0][0]);
-        render_a_obj(footVertexArrayID,foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, (GLsizei)foot_indices.size());
+//        glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
 
-        glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
+//        glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &BikeModelMatrix[0][0]);
-        glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
+//        glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, BikeTexture);
