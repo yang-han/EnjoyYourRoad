@@ -85,6 +85,8 @@ add_executable(main
     stb_image.cpp
 	skybox.cpp
 	skybox.h
+	shadow.cpp
+	shadow.h
 
 
 )

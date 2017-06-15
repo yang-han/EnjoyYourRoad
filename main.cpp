@@ -26,6 +26,7 @@ using namespace glm;
 #include <aabb.hpp>
 
 #include <skybox.h>
+#include <shadow.h>
 
 extern std::vector<AABB> object;
 extern AABB character;
@@ -203,7 +204,7 @@ int main( void )
     GLuint programID = LoadShaders( "VertexShader.vs", "FragmentShader.fs" );
 
     // Get a handle for our "MVP" uniform
-    GLint MatrixID = glGetUniformLocation(programID, "MVP");
+    GLint ProjectionMatrixID = glGetUniformLocation(programID, "P");
     GLint ViewMatrixID = glGetUniformLocation(programID, "V");
     GLint ModelMatrixID = glGetUniformLocation(programID, "M");
 
@@ -305,7 +306,7 @@ int main( void )
 
     // Get a handle for our "LightPosition" uniform
     glUseProgram(programID);
-    GLint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
+    GLint LightID = glGetUniformLocation(programID, "lightPos");
 
     // For speed computation
     double lastTime = glfwGetTime();
@@ -315,7 +316,7 @@ int main( void )
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
+    //------------------------------skybox-------------------------------
     std::vector<std::string> faces
             {
                     "skybox/right.tga",
@@ -333,10 +334,6 @@ int main( void )
 
     GLint sky_ProjectionMatrixID = glGetUniformLocation(skyShader, "projection");
     GLint sky_ViewMatrixID = glGetUniformLocation(skyShader, "view");
-
- //   GLint SkyTextureID = glGetUniformLocation(skyShader, "cubemap");
-
-
 
     GLuint skyboxVAO, skyboxVBO;
     skybox_buffer(skyboxVAO, skyboxVBO);
@@ -366,6 +363,17 @@ int main( void )
     glm::mat4 obsModelMatrix = glm::mat4(1.0f);
 
     glm::mat4 footModelMatrix = glm::mat4(1.0f);
+
+    GLuint depthProgramID = LoadShaders( "depth.vs", "depth.fs" );
+    //------------------------shadow-------------------------------
+    int windowWidth;
+    int windowHeight;
+    glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
+    GLuint depthMapFBO;
+    GLuint depthMap;
+    shadowFBO(depthMapFBO, depthMap);
+    GLint ShadowMapID = glGetUniformLocation(programID, "shadowMap");
+
     do{
 
         // Measure speed
@@ -385,38 +393,66 @@ int main( void )
 
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //--------------render depth of scene to the texture-------------
+        // Compute the MVP matrix from the light's point of view
+        glm::vec3 lightPos = glm::vec3(-10.0f, 29.0f, -10.0f);
+        glm::mat4 lightSpaceMatrix = getlightSpaceMatrix(lightPos);
 
-
-        // Use our shader
-        glUseProgram(programID);
-
-
-
+        glUseProgram(depthProgramID);
+        glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "lightSpaceMatrix"), 1, GL_FALSE, &lightSpaceMatrix[0][0]);
+    
+        // Clear the screen
+        glViewport(0, 0, 2048, 2048);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
         // Compute the MVP matrix from keyboard and mouse input
         glm::mat4 bike_rotate_matrix = computeMatricesFromInputs(BikeMotionMatrix, footModelMatrix);
-
         BikeModelMatrix = BikeMotionMatrix * bike_rotate_matrix * BaseBikeModelMatrix;
 
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();
-
         glm::mat4 SceneModelMatrix = SceneTransformMatrix;
+        
+        glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "model"), 1, GL_FALSE, &SceneModelMatrix[0][0]);
+        render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
+		render_a_obj ( VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei) indices.size ( ) );
 
-        glm::mat4 MVP = ProjectionMatrix * ViewMatrix * SceneModelMatrix;
+        obsRotateMatrix = glm::rotate(obsRotateMatrix, 0.01f, yAxis);
+        obsTransformMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-10, 0, -5));
+        obsModelMatrix = obsTransformMatrix * obsRotateMatrix;
+        for (int i = 0; i < num_of_objs; ++i) {
+            // glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
+            glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "model"), 1, GL_FALSE, &obsModelMatrix[0][0]);
+            setAABB(objs_AABB_ID[i], obsModelMatrix);
+            render_a_obj ( objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], (GLsizei) obj_indices[i].size ( ) );
+        }
 
-        glm::mat4 bike_MVP = ProjectionMatrix * ViewMatrix * BikeModelMatrix;
+        glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "model"), 1, GL_FALSE, &footModelMatrix[0][0]);
+        render_a_obj(footVertexArrayID,foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, (GLsizei)foot_indices.size());
+        glUniformMatrix4fv(glGetUniformLocation(depthProgramID, "model"), 1, GL_FALSE, &BikeModelMatrix[0][0]);
+        render_a_obj(BikeVertexArrayID,bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, (GLsizei)bike_indices.size());
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        //-------------------render as usual-------------------------------------
+        // reset viewport
+        glViewport(0, 0, windowWidth, windowHeight);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // Use our shader
+        glUseProgram(programID);
+
+        // glm::mat4 MVP = ProjectionMatrix * ViewMatrix * SceneModelMatrix;
+        // glm::mat4 bike_MVP = ProjectionMatrix * ViewMatrix * BikeModelMatrix;
 
 		
         // Send our transformation to the currently bound shader,
         // in the "MVP" uniform
-        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &SceneModelMatrix[0][0]);
         glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
         // Bind our texture in Texture Unit 0
-      
-		glm::vec3 lightPos = glm::vec3 ( -60, 200, -95 );
 		glUniform3f ( LightID, lightPos.x, lightPos.y, lightPos.z );
+        glUniformMatrix4fv(glGetUniformLocation(programID, "lightSpaceMatrix"), 1, GL_FALSE, &lightSpaceMatrix[0][0]);
 
 			/*
 		glUseProgram ( bottomID );
@@ -425,57 +461,47 @@ int main( void )
 		glUniformMatrix4fv ( bottomViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0] );
 
 		*/
-		glActiveTexture ( GL_TEXTURE1 );
+		glActiveTexture ( GL_TEXTURE0 );
 		glBindTexture ( GL_TEXTURE_2D, Texture );
-		// Set our "myTextureSampler" sampler to user Texture Unit 0
-		glUniform1i ( TextureID, 1 );
-        render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
+		glUniform1i ( TextureID, 0 );
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glUniform1i(ShadowMapID, 1);
 
-        //        render_a_obj(vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei)indices.size());
-		//        render_a_obj(test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
+        render_a_obj(testVertexArrayID,test_vertexbuffer, test_uvbuffer, test_normalbuffer, test_elementbuffer, (GLsizei)test_indices.size());
 		render_a_obj ( VertexArrayID, vertexbuffer, uvbuffer, normalbuffer, elementbuffer, (GLsizei) indices.size ( ) );
 
-        obsRotateMatrix = glm::rotate(obsRotateMatrix, 0.01f, yAxis);
-        obsTransformMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-10, 0, -5));
-        obsModelMatrix = obsTransformMatrix * obsRotateMatrix;
-
-        glm::mat4 obs_MVP = ProjectionMatrix * ViewMatrix * obsModelMatrix;
+        // glm::mat4 obs_MVP = ProjectionMatrix * ViewMatrix * obsModelMatrix;
         for (int i = 0; i < num_of_objs; ++i) {
-            glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &obs_MVP[0][0]);
+            glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
             glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &obsModelMatrix[0][0]);
             setAABB(objs_AABB_ID[i], obsModelMatrix);
             render_a_obj ( objVertexArrayID[i], obj_vertexbuffer[i], obj_uvbuffer[i], obj_normalbuffer[i], obj_elementbuffer[i], (GLsizei) obj_indices[i].size ( ) );
         }
 
-        glm::mat4 foot_MVP = ProjectionMatrix * ViewMatrix * footModelMatrix;
-        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &foot_MVP[0][0]);
+        // glm::mat4 foot_MVP = ProjectionMatrix * ViewMatrix * footModelMatrix;
+        glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &footModelMatrix[0][0]);
         render_a_obj(footVertexArrayID,foot_vertexbuffer, foot_uvbuffer, foot_normalbuffer, foot_elementbuffer, (GLsizei)foot_indices.size());
 
-
-        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &bike_MVP[0][0]);
+        glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &BikeModelMatrix[0][0]);
         glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, BikeTexture);
         glUniform1i(TextureID, 0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glUniform1i(ShadowMapID, 1);
 
         render_a_obj(BikeVertexArrayID,bike_vertexbuffer, bike_uvbuffer, bike_normalbuffer, bike_elementbuffer, (GLsizei)bike_indices.size());
-
-
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        glDisableVertexAttribArray(2);
-
+        
+        //----------------------render skybox----------------------------
         glUseProgram(skyShader);
-
         glm::mat4 view = glm::mat4(glm::mat3(ViewMatrix));
         glUniformMatrix4fv(sky_ProjectionMatrixID, 1, GL_FALSE, &ProjectionMatrix[0][0]);
         glUniformMatrix4fv(sky_ViewMatrixID, 1, GL_FALSE, &view[0][0]);
-
-//        glActiveTexture(GL_TEXTURE0);
-//        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 
         render_skybox(skyboxVAO, cubemapTexture);
 

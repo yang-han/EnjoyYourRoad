@@ -208,12 +208,18 @@ glm::mat4 computeMatricesFromInputs(glm::mat4& BikeTransformMatrix, glm::mat4& f
 
     }
     else{
+        if(speed >= 0)
+        {
+            speed -= 0.2f;
+            if(speed<0.0f)speed = 0.0f;
+        }
+        else {
+            speed += 0.2f;if(speed > 0.0f)speed = 0.0f;
+        }
         if ( !checkCollide(glm::translate ( BikeTransformMatrix, -motion_direction*deltaTime*speed )*glm::rotate(glm::mat4(1.0f), motion_horizonal_angle, yAxis)))
         {
 
             delta_position -= motion_direction * deltaTime * speed;
-            if(speed >= 0){speed -= 0.5f;if(speed<0.0f)speed = 0.0f;}
-            else {speed += 0.5f;if(speed > 0.0f)speed = 0.0f;}
         }else{
             speed = 0.0f;
         }
