@@ -9,37 +9,17 @@ All platforms are supported.
 
 
 
-[TOC]
-
-
-
-
-
 ## 0. Required
 
-### 0.1 Mandatory
+- OpenGL 330 version +
 
-   - openGL 330 version +
-   - (all other libraries have been linked to the binary file by us.)
-
-### 0.2 Optional
-
-(This is used to run the start interface. It can be used to change the map, though we just implement one map.)
-
-- python 3.x
-- tkinter
 
 ## 1. How to run it
 
 ### 1.1 Binay package
 
-You can 
 
-```shell
-python3 run.py
-```
-
-Or just run the `main` executable file
+Just run the built `main` executable file
 
 ```shell
 ./main # For *nix system
@@ -50,8 +30,6 @@ Also, `double click` to run it may not work for *nix because of working director
 
 For windows, just double click it.
 
-In fact, we will use the Command Line Arguments to change the Map in the game in the future. (That's also why we need a start interface.)
-
 ### 1.2 Build from source
 
 ```shell
@@ -60,8 +38,7 @@ mkdir build
 cd build
 cmake ..
 make
-cd ..
-python3 run.py # or ./main
+./main
 ```
 
 
@@ -109,16 +86,12 @@ If the preview doesn't work, you can view it at [here](http://orbmd3ef2.bkt.clou
 
 ## 6. Contributors
 
-(No priority)
-
 YANG Han
 
 WANG Daxin
 
 WEN Zihao
 
-
-
 ## 7. Questions
 
-If you have any problems about it, you can just create a issue, or contact me at QQ 994819188.
+If you have any problems about this project, you can just create a issue, or reach me through Email.
